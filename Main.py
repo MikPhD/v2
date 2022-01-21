@@ -6,7 +6,7 @@ import argparse
 import sys
 import torch
 from torch_geometric.data import DataListLoader
-from torch_geometric.loader import DataLoader
+from torch_geometric.data import DataLoader
 from torch_geometric.nn import DataParallel
 from pdb import set_trace
 
@@ -61,13 +61,10 @@ DSS = DSS.to(device)
 print("#################### TRAINING #######################")
 train_dss = Train_DSS(net=DSS, learning_rate=0.01, n_epochs=n_epoch, device=device)
 
-# restart function loading Model/best_model.pt
-if restart:
-    optimizer, scheduler, epoch, min_val_loss = train_dss.restart(path='Model/best_model.pt')
-else:
-    optimizer, scheduler, epoch, min_val_loss = train_dss.createOptimizerAndScheduler()
+optimizer, scheduler, epoch, min_val_loss = train_dss.createOptimizerAndScheduler()
 
-min_val_loss = 1.e-1
+if restart:
+    optimizer, scheduler, epoch, min_val_loss = train_dss.restart(optimizer, scheduler, path='Model/best_model.pt')
 
 GNN = train_dss.trainDSS(loader_train, loader_val, optimizer, scheduler, min_val_loss, epoch, k)
 #

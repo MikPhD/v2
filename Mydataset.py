@@ -40,10 +40,13 @@ class MyOwnDataset(InMemoryDataset):
             files.append(dir + "D.npy")
             files.append(dir + "F.npy")
             files.append(dir + "re.npy")
-            files.append(dir + "U_P.npy")
+            files.append(dir + "U.npy")
         # set_trace()
         return files
 
+    @property
+    def processed_dir(self):
+        return self.root + "/processed/"
 
     @property
     def processed_file_names(self):
@@ -65,16 +68,16 @@ class MyOwnDataset(InMemoryDataset):
 
             C = np.load(input_dir + '/C.npy')  #connection list
             D = np.load(input_dir + '/D.npy')  #edge attr - distances
-            U_P = np.load(input_dir + '/U_P.npy')  #campo medio + pressione
+            U = np.load(input_dir + '/U.npy')  #campo medio + pressione
             F = np.load(input_dir + '/F.npy')  #forzaggio
             Re = np.load(input_dir + '/re.npy')  #Reynolds number
 
-            U_P_Re = np.insert(U_P, 3, Re, axis=1)
+            U_Re = np.insert(U, 2, Re, axis=1)
 
             edge_index = torch.tensor(C, dtype=torch.long)
             edge_attr = torch.tensor(D, dtype=torch.float)
 
-            x = torch.tensor(U_P_Re, dtype=torch.float)
+            x = torch.tensor(U_Re, dtype=torch.float)
             y = torch.tensor(F, dtype=torch.float)
 
             data = Data(x = x, edge_index=edge_index.t().contiguous(), edge_attr=edge_attr, y=y)

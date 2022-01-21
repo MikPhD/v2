@@ -116,7 +116,7 @@ class CreateData:
             specific_dir = "./dataset/raw/" + mode + "/" + h
             np.save(specific_dir + "/C.npy", C)
             np.save(specific_dir + "/D.npy", D)
-            np.save(specific_dir + "/U_P.npy", U)
+            np.save(specific_dir + "/U.npy", U)
             np.save(specific_dir + "/F.npy", F)
             # np.save(specific_dir + "/coord.npy", coord)
             np.save(specific_dir + "/re.npy", int(h))

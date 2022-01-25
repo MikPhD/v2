@@ -19,7 +19,6 @@ cmaps = OrderedDict()
 
 cmaps['Perceptually Uniform Sequential'] = ['plasma_r']
 
-
 def mesh2triang(mesh):
     xy = mesh.coordinates()
     return tri.Triangulation(xy[:, 0], xy[:, 1], mesh.cells())

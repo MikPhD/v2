@@ -9,6 +9,7 @@ import argparse
 from pdb import set_trace
 from progress.bar import Bar
 import itertools
+import time
 
 class CreateData:
     def __init__(self):
@@ -55,7 +56,7 @@ class CreateData:
             collapsed_space = Space.sub(0).collapse()
             dofmap = collapsed_space.dofmap()
 
-            C = [] ##connection list
+            C_temp = [] ##connection list
             D = [] ##distances between connection
             with Bar("Creazione connessioni...", max=mesh.num_cells()) as bar:
                 for i, j in enumerate(cells(mesh)):
@@ -71,36 +72,41 @@ class CreateData:
                     c5 = [int((dofs_list[5])/2), int((dofs_list[0])/2)]
                     c6 = [int((dofs_list[5])/2), int((dofs_list[1])/2)]
 
-                    dist_c1_x = coord_dofs[3][0] - coord_dofs[1][0]
-                    dist_c1_y = coord_dofs[3][1] - coord_dofs[1][1]
+                    dist_c1_x = abs(coord_dofs[3][0] - coord_dofs[1][0])
+                    dist_c1_y = abs(coord_dofs[3][1] - coord_dofs[1][1])
 
-                    dist_c2_x = coord_dofs[3][0] - coord_dofs[2][0]
-                    dist_c2_y = coord_dofs[3][1] - coord_dofs[2][1]
+                    dist_c2_x = abs(coord_dofs[3][0] - coord_dofs[2][0])
+                    dist_c2_y = abs(coord_dofs[3][1] - coord_dofs[2][1])
 
-                    dist_c3_x = coord_dofs[4][0] - coord_dofs[4][0]
-                    dist_c3_y = coord_dofs[4][1] - coord_dofs[0][1]
+                    dist_c3_x = abs(coord_dofs[4][0] - coord_dofs[4][0])
+                    dist_c3_y = abs(coord_dofs[4][1] - coord_dofs[0][1])
 
-                    dist_c4_x = coord_dofs[4][0] - coord_dofs[4][0]
-                    dist_c4_y = coord_dofs[2][1] - coord_dofs[2][1]
+                    dist_c4_x = abs(coord_dofs[4][0] - coord_dofs[4][0])
+                    dist_c4_y = abs(coord_dofs[2][1] - coord_dofs[2][1])
 
-                    dist_c5_x = coord_dofs[5][0] - coord_dofs[5][0]
-                    dist_c5_y = coord_dofs[0][1] - coord_dofs[0][1]
+                    dist_c5_x = abs(coord_dofs[5][0] - coord_dofs[5][0])
+                    dist_c5_y = abs(coord_dofs[0][1] - coord_dofs[0][1])
 
-                    dist_c6_x = coord_dofs[5][0] - coord_dofs[5][0]
-                    dist_c6_y = coord_dofs[1][1] - coord_dofs[1][1]
+                    dist_c6_x = abs(coord_dofs[5][0] - coord_dofs[5][0])
+                    dist_c6_y = abs(coord_dofs[1][1] - coord_dofs[1][1])
 
-                    C = list(itertools.chain(C, [c1], [c2], [c3], [c4], [c5], [c6]))
+                    C_temp = list(itertools.chain(C_temp, [c1], [c2], [c3], [c4], [c5], [c6]))
                     D = list(itertools.chain(D, [dist_c1_x, dist_c1_y], [dist_c2_x, dist_c2_y], [dist_c3_x, dist_c3_y],
                                              [dist_c4_x, dist_c4_y], [dist_c5_x, dist_c5_y], [dist_c6_x, dist_c6_y]))
-                for y in C:
-                    bar.next()
-                    if y in C:
-                        C.remove(y)
+
+                C = []
+                for i, j in enumerate(C_temp):
+                    if j not in C:
+                        C.append(j)
+                        del D[i]
 
 
             ####definisco le node features della gnn #####
-            coord = list(collapsed_space.tabulate_dof_coordinates().tolist())
-            coord = list(k for k,_ in itertools.groupby(coord))
+            coord = []
+            coord_temp = list(collapsed_space.tabulate_dof_coordinates().tolist())
+            for i in coord_temp:
+                if i not in coord:
+                    coord.append(i)
 
             U = []
             F = []

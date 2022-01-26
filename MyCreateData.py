@@ -74,31 +74,44 @@ class CreateData:
 
                     dist_c1_x = abs(coord_dofs[3][0] - coord_dofs[1][0])
                     dist_c1_y = abs(coord_dofs[3][1] - coord_dofs[1][1])
+                    dist_c1 = [dist_c1_x, dist_c1_y]
 
                     dist_c2_x = abs(coord_dofs[3][0] - coord_dofs[2][0])
                     dist_c2_y = abs(coord_dofs[3][1] - coord_dofs[2][1])
-
-                    dist_c3_x = abs(coord_dofs[4][0] - coord_dofs[4][0])
+                    dist_c2 = [dist_c2_x, dist_c2_y]
+                    #
+                    dist_c3_x = abs(coord_dofs[4][0] - coord_dofs[0][0])
                     dist_c3_y = abs(coord_dofs[4][1] - coord_dofs[0][1])
+                    dist_c3 = [dist_c3_x, dist_c3_y]
 
-                    dist_c4_x = abs(coord_dofs[4][0] - coord_dofs[4][0])
-                    dist_c4_y = abs(coord_dofs[2][1] - coord_dofs[2][1])
+                    dist_c4_x = abs(coord_dofs[4][0] - coord_dofs[2][0])
+                    dist_c4_y = abs(coord_dofs[4][1] - coord_dofs[2][1])
+                    dist_c4 = [dist_c4_x, dist_c4_y]
 
-                    dist_c5_x = abs(coord_dofs[5][0] - coord_dofs[5][0])
-                    dist_c5_y = abs(coord_dofs[0][1] - coord_dofs[0][1])
+                    dist_c5_x = abs(coord_dofs[5][0] - coord_dofs[0][0])
+                    dist_c5_y = abs(coord_dofs[5][1] - coord_dofs[0][1])
+                    dist_c5 = [dist_c5_x, dist_c5_y]
 
-                    dist_c6_x = abs(coord_dofs[5][0] - coord_dofs[5][0])
-                    dist_c6_y = abs(coord_dofs[1][1] - coord_dofs[1][1])
+                    dist_c6_x = abs(coord_dofs[5][0] - coord_dofs[1][0])
+                    dist_c6_y = abs(coord_dofs[5][1] - coord_dofs[1][1])
+                    dist_c6 = [dist_c6_x, dist_c6_y]
 
                     C_temp = list(itertools.chain(C_temp, [c1], [c2], [c3], [c4], [c5], [c6]))
-                    D = list(itertools.chain(D, [dist_c1_x, dist_c1_y], [dist_c2_x, dist_c2_y], [dist_c3_x, dist_c3_y],
-                                             [dist_c4_x, dist_c4_y], [dist_c5_x, dist_c5_y], [dist_c6_x, dist_c6_y]))
+                    # D = list(itertools.chain(D, [dist_c1_x, dist_c1_y], [dist_c2_x, dist_c2_y], [dist_c3_x, dist_c3_y],
+                    #                          [dist_c4_x, dist_c4_y], [dist_c5_x, dist_c5_y], [dist_c6_x, dist_c6_y]))
+
+                    D = list(itertools.chain(D, [dist_c1], [dist_c2], [dist_c3], [dist_c4], [dist_c5], [dist_c6]))
 
                 C = []
-                for i, j in enumerate(C_temp):
+                remove = []
+                for i, j in enumerate(C_temp, start=0):
                     if j not in C:
                         C.append(j)
-                        del D[i]
+                    else:
+                        remove.append(i)
+
+                for index in sorted(remove, reverse=True):
+                    del D[index]
 
 
             ####definisco le node features della gnn #####

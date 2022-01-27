@@ -3,7 +3,7 @@ import torch
 import time
 import sys
 import os
-# from MyPlot import Plot
+from MyPlot import Plot
 import ast
 import matplotlib.pyplot as plt
 
@@ -152,7 +152,7 @@ class Train_DSS:
             else:
                 print("Training finished, took {:.2f}s".format(self.training_time))
 
-            if int(epoch) % 5000 == 0:
+            if int(epoch) % 2 == 0:
                 F_fin = F[str(k)].cpu().numpy()
                 np.save("./Results/results" + str(epoch) + ".npy", F_fin)
                 print("File saved!")
@@ -185,10 +185,10 @@ class Train_DSS:
         f_loss_train.close()
         f_loss_val.close()
 
-        # ## Save plot training ##
-        # MyPlot = Plot()
-        # MyPlot.plot_loss()
-        # MyPlot.plot_results()
+        ## Save plot training ##
+        MyPlot = Plot()
+        MyPlot.plot_loss()
+        MyPlot.plot_results()
 
         return self.net
 

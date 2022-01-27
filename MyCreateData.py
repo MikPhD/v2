@@ -102,16 +102,20 @@ class CreateData:
 
                     D = list(itertools.chain(D, [dist_c1], [dist_c2], [dist_c3], [dist_c4], [dist_c5], [dist_c6]))
 
+                ############## remove duplicate ####################
                 C = []
                 remove = []
-                for i, j in enumerate(C_temp, start=0):
-                    if j not in C:
-                        C.append(j)
-                    else:
-                        remove.append(i)
+                with Bar("Rimozione duplicati connessione...", max=len(C_temp)) as bar2:
+                    for i, j in enumerate(C_temp, start=0):
+                        bar2.next()
+                        if j not in C:
+                            C.append(j)
+                        else:
+                            remove.append(i)
 
-                for index in sorted(remove, reverse=True):
-                    del D[index]
+                with Bar("Rimozione duplicati distanze...", max=len(remove)) as bar3:
+                    for index in sorted(remove, reverse=True):
+                        del D[index]
 
 
             ####definisco le node features della gnn #####

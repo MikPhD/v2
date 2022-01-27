@@ -8,6 +8,7 @@ import torch
 from torch_geometric.data import DataListLoader
 from torch_geometric.data import DataLoader
 from torch_geometric.nn import DataParallel
+import torch_geometric.transforms as T
 from pdb import set_trace
 
 parser = argparse.ArgumentParser()
@@ -24,9 +25,9 @@ val_cases = ['110']
 test_cases = ['110']
 
 print("#################### DATA ADAPTING FOR GNN #######################")
-createdata = CreateData()
-createdata.transform(train_cases, 'train')
-createdata.transform(val_cases, 'val')
+# createdata = CreateData()
+# createdata.transform(train_cases, 'train')
+# createdata.transform(val_cases, 'val')
 
 
 print("#################### CREATING Inner DATASET #######################")

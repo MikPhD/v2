@@ -83,9 +83,9 @@ class MyOwnDataset(InMemoryDataset):
             y = torch.tensor(F, dtype=torch.float)
 
             data = Data(x = x, edge_index=edge_index.t().contiguous(), edge_attr=edge_attr, y=y)
-            ### make the graph automatically undirected ###
-            transform = T.ToUndirected("add")
-            data = transform(data)
+            # ### make the graph automatically undirected ###
+            # transform = T.ToUndirected("add")
+            # data = transform(data)
             data_list.append(data)
 
             if self.pre_filter is not None:
@@ -101,6 +101,6 @@ class MyOwnDataset(InMemoryDataset):
         else:
             torch.save(self.collate(data_list), self.processed_paths[2])
 
-        set_trace()
+
 
 

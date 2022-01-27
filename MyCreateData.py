@@ -56,8 +56,13 @@ class CreateData:
             collapsed_space = Space.sub(0).collapse()
             dofmap = collapsed_space.dofmap()
 
+            ###### Vertex on boundary ######
+            bmesh = BoundaryMesh(mesh, "exterior", True).coordinates()
+
+
             C_temp = [] ##connection list
             D = [] ##distances between connection
+
             with Bar("Creazione connessioni...", max=mesh.num_cells()) as bar:
                 for i, j in enumerate(cells(mesh)):
                     bar.next()
@@ -65,58 +70,81 @@ class CreateData:
                     c0 = Cell(mesh, i)
                     dofs_list = dofmap.cell_dofs(c0.index())
                     coord_dofs = collapsed_space.element().tabulate_dof_coordinates(c0)
-                    c1 = [int((dofs_list[3])/2), int((dofs_list[1])/2)]
-                    c2 = [int((dofs_list[3])/2), int((dofs_list[2])/2)]
-                    c3 = [int((dofs_list[4])/2), int((dofs_list[0])/2)]
-                    c4 = [int((dofs_list[4])/2), int((dofs_list[2])/2)]
-                    c5 = [int((dofs_list[5])/2), int((dofs_list[0])/2)]
-                    c6 = [int((dofs_list[5])/2), int((dofs_list[1])/2)]
 
-                    dist_c1_x = abs(coord_dofs[3][0] - coord_dofs[1][0])
-                    dist_c1_y = abs(coord_dofs[3][1] - coord_dofs[1][1])
-                    dist_c1 = [dist_c1_x, dist_c1_y]
 
-                    dist_c2_x = abs(coord_dofs[3][0] - coord_dofs[2][0])
-                    dist_c2_y = abs(coord_dofs[3][1] - coord_dofs[2][1])
-                    dist_c2 = [dist_c2_x, dist_c2_y]
-                    #
-                    dist_c3_x = abs(coord_dofs[4][0] - coord_dofs[0][0])
-                    dist_c3_y = abs(coord_dofs[4][1] - coord_dofs[0][1])
-                    dist_c3 = [dist_c3_x, dist_c3_y]
-
-                    dist_c4_x = abs(coord_dofs[4][0] - coord_dofs[2][0])
-                    dist_c4_y = abs(coord_dofs[4][1] - coord_dofs[2][1])
-                    dist_c4 = [dist_c4_x, dist_c4_y]
-
-                    dist_c5_x = abs(coord_dofs[5][0] - coord_dofs[0][0])
-                    dist_c5_y = abs(coord_dofs[5][1] - coord_dofs[0][1])
-                    dist_c5 = [dist_c5_x, dist_c5_y]
-
-                    dist_c6_x = abs(coord_dofs[5][0] - coord_dofs[1][0])
-                    dist_c6_y = abs(coord_dofs[5][1] - coord_dofs[1][1])
-                    dist_c6 = [dist_c6_x, dist_c6_y]
-
-                    C_temp = list(itertools.chain(C_temp, [c1], [c2], [c3], [c4], [c5], [c6]))
-                    # D = list(itertools.chain(D, [dist_c1_x, dist_c1_y], [dist_c2_x, dist_c2_y], [dist_c3_x, dist_c3_y],
-                    #                          [dist_c4_x, dist_c4_y], [dist_c5_x, dist_c5_y], [dist_c6_x, dist_c6_y]))
-
-                    D = list(itertools.chain(D, [dist_c1], [dist_c2], [dist_c3], [dist_c4], [dist_c5], [dist_c6]))
-
-                ############## remove duplicate ####################
-                C = []
-                remove = []
-                with Bar("Rimozione duplicati connessione...", max=len(C_temp)) as bar2:
-                    for i, j in enumerate(C_temp, start=0):
-                        bar2.next()
-                        if j not in C:
-                            C.append(j)
+                    z=0
+                    for n, x in enumerate(coord_dofs):
+                        if x in bmesh:
+                            print("Punto sul boundary: Coord: {}, Index: {}".format(x, dofs_list[n]))
+                            z += 1
+                            if z >= 6:
+                                set_trace()
                         else:
-                            remove.append(i)
+                            print("Non sul Bound: Coord: {}, Index: {}".format(x, dofs_list[n]))
 
-                with Bar("Rimozione duplicati distanze...", max=len(remove)) as bar3:
-                    for index in sorted(remove, reverse=True):
-                        del D[index]
 
+
+                    # c1 = [int((dofs_list[3])/2), int((dofs_list[1])/2)]
+                    # c2 = [int((dofs_list[3])/2), int((dofs_list[2])/2)]
+                    # c3 = [int((dofs_list[4])/2), int((dofs_list[0])/2)]
+                    # c4 = [int((dofs_list[4])/2), int((dofs_list[2])/2)]
+                    # c5 = [int((dofs_list[5])/2), int((dofs_list[0])/2)]
+                    # c6 = [int((dofs_list[5])/2), int((dofs_list[1])/2)]
+                    #
+                    # dist_c1_x = abs(coord_dofs[3][0] - coord_dofs[1][0])
+                    # dist_c1_y = abs(coord_dofs[3][1] - coord_dofs[1][1])
+                    # dist_c1 = [dist_c1_x, dist_c1_y]
+                    #
+                    # dist_c2_x = abs(coord_dofs[3][0] - coord_dofs[2][0])
+                    # dist_c2_y = abs(coord_dofs[3][1] - coord_dofs[2][1])
+                    # dist_c2 = [dist_c2_x, dist_c2_y]
+                    # #
+                    # dist_c3_x = abs(coord_dofs[4][0] - coord_dofs[0][0])
+                    # dist_c3_y = abs(coord_dofs[4][1] - coord_dofs[0][1])
+                    # dist_c3 = [dist_c3_x, dist_c3_y]
+                    #
+                    # dist_c4_x = abs(coord_dofs[4][0] - coord_dofs[2][0])
+                    # dist_c4_y = abs(coord_dofs[4][1] - coord_dofs[2][1])
+                    # dist_c4 = [dist_c4_x, dist_c4_y]
+                    #
+                    # dist_c5_x = abs(coord_dofs[5][0] - coord_dofs[0][0])
+                    # dist_c5_y = abs(coord_dofs[5][1] - coord_dofs[0][1])
+                    # dist_c5 = [dist_c5_x, dist_c5_y]
+                    #
+                    # dist_c6_x = abs(coord_dofs[5][0] - coord_dofs[1][0])
+                    # dist_c6_y = abs(coord_dofs[5][1] - coord_dofs[1][1])
+                    # dist_c6 = [dist_c6_x, dist_c6_y]
+                    #
+                    # C_temp = list(itertools.chain(C_temp, [c1], [c2], [c3], [c4], [c5], [c6]))
+                    # # D = list(itertools.chain(D, [dist_c1_x, dist_c1_y], [dist_c2_x, dist_c2_y], [dist_c3_x, dist_c3_y],
+                    # #                          [dist_c4_x, dist_c4_y], [dist_c5_x, dist_c5_y], [dist_c6_x, dist_c6_y]))
+                    #
+                    # D = list(itertools.chain(D, [dist_c1], [dist_c2], [dist_c3], [dist_c4], [dist_c5], [dist_c6]))
+
+            ############## remove duplicate ####################
+            C = []
+            remove = []
+            with Bar("Rimozione duplicati connessione...", max=len(C_temp)) as bar2:
+                for i, j in enumerate(C_temp, start=0):
+                    bar2.next()
+                    if j not in C:
+                        C.append(j)
+                    else:
+                        remove.append(i)
+
+            with Bar("Rimozione duplicati distanze...", max=len(remove)) as bar3:
+                for index in sorted(remove, reverse=True):
+                    del D[index]
+
+
+            C_rev = []
+            with Bar("Creazione doppia direzionalità...", max=len(C)) as bar4:
+                for i in range(len(C)):
+                    bar4.next()
+                    C_rev.append(C[i][::-1])
+
+            C += C_rev
+            D += D
 
             ####definisco le node features della gnn #####
             coord = []
@@ -132,6 +160,7 @@ class CreateData:
               U.append(list(u(np.array(x))))
               F.append(list(forc(np.array(x))))
 
+            set_trace()
             ######################### Fine creazione elementi############################
 
             ###################### Salvataggio file Numpy ##############################

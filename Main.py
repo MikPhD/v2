@@ -18,8 +18,8 @@ args = parser.parse_args()
 n_epoch = args.n_epoch
 restart = args.restart
 
-# train_cases = ['40','50','60','70','80','90','100','120','130','140','150']
-train_cases = ['110']
+train_cases = ['40','50','60','70','80','90','100','120','130','140','150']
+# train_cases = ['110']
 val_cases = ['110']
 test_cases = ['110']
 

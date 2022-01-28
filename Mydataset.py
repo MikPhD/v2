@@ -7,13 +7,14 @@ import sys
 import math
 import torch
 import torch_geometric
-from torch_geometric import utils
+import torch_geometric.transforms as T
 from torch_geometric.data import InMemoryDataset, Data, DataLoader
 # from torch_geometric.nn import DataParallel
 from pdb import set_trace
 
 class MyOwnDataset(InMemoryDataset):
     def __init__(self, root, mode, cases, transform=None, pre_transform=None):
+        # self.pre_transform = pre_transform
         self.mode = mode
         self.cases = cases
         super(MyOwnDataset, self).__init__(root, transform, pre_transform)
@@ -28,6 +29,7 @@ class MyOwnDataset(InMemoryDataset):
             path = self.processed_paths[2]
 
         self.data, self.slices = torch.load(path)
+
 
     @property
     def raw_file_names(self):
@@ -81,6 +83,7 @@ class MyOwnDataset(InMemoryDataset):
             y = torch.tensor(F, dtype=torch.float)
 
             data = Data(x = x, edge_index=edge_index.t().contiguous(), edge_attr=edge_attr, y=y)
+            # data = T.ToUndirected(data)
             data_list.append(data)
 
             if self.pre_filter is not None:
@@ -95,3 +98,7 @@ class MyOwnDataset(InMemoryDataset):
             torch.save(self.collate(data_list), self.processed_paths[1])
         else:
             torch.save(self.collate(data_list), self.processed_paths[2])
+
+        # set_trace()
+
+

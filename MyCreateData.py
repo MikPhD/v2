@@ -102,6 +102,7 @@ class CreateData:
 
                     D = list(itertools.chain(D, [dist_c1], [dist_c2], [dist_c3], [dist_c4], [dist_c5], [dist_c6]))
 
+                ############## remove duplicate ####################
                 C = []
                 remove = []
                 with Bar("Rimozione duplicati connessioni...", max=len(C_temp)) as bar2:

@@ -59,7 +59,6 @@ class CreateData:
             ###### Vertex on boundary ######
             bmesh = BoundaryMesh(mesh, "exterior", True).coordinates()
 
-
             C_temp = [] ##connection list
             D = [] ##distances between connection
 
@@ -71,25 +70,31 @@ class CreateData:
                     dofs_list = dofmap.cell_dofs(c0.index())
                     coord_dofs = collapsed_space.element().tabulate_dof_coordinates(c0)
 
-
-                    z=0
-                    for n, x in enumerate(coord_dofs):
+                    bound_index = []
+                    for n, x in enumerate(coord_dofs, start=0):
+                        print(n)
                         if x in bmesh:
-                            print("Punto sul boundary: Coord: {}, Index: {}".format(x, dofs_list[n]))
-                            z += 1
-                            if z >= 6:
-                                set_trace()
-                        else:
-                            print("Non sul Bound: Coord: {}, Index: {}".format(x, dofs_list[n]))
+                            bound_index.append(n)
 
+                    # set_trace()
 
+                        # else:
+                        #     print("Non sul Bound: Coord: {}, Index: {}".format(x, dofs_list[n]))
 
-                    # c1 = [int((dofs_list[3])/2), int((dofs_list[1])/2)]
-                    # c2 = [int((dofs_list[3])/2), int((dofs_list[2])/2)]
-                    # c3 = [int((dofs_list[4])/2), int((dofs_list[0])/2)]
-                    # c4 = [int((dofs_list[4])/2), int((dofs_list[2])/2)]
-                    # c5 = [int((dofs_list[5])/2), int((dofs_list[0])/2)]
-                    # c6 = [int((dofs_list[5])/2), int((dofs_list[1])/2)]
+                    if 3 and 1 in bound_index:
+                        c2 = [int((dofs_list[3])/2), int((dofs_list[2])/2)]
+                    if 3 and 2 in bound_index:
+                        c1 = [int((dofs_list[3])/2), int((dofs_list[1])/2)]
+
+                    if 4 and 0 in bound_index:
+                        c3 = [int((dofs_list[4])/2), int((dofs_list[0])/2)]
+                    if 4 and 2 in bound_index:
+                        c4 = [int((dofs_list[4])/2), int((dofs_list[2])/2)]
+
+                    if 5 and 0 in bound_index:
+                        c5 = [int((dofs_list[5])/2), int((dofs_list[0])/2)]
+                    if 5 and 1 in bound_index:
+                        c6 = [int((dofs_list[5])/2), int((dofs_list[1])/2)]
                     #
                     # dist_c1_x = abs(coord_dofs[3][0] - coord_dofs[1][0])
                     # dist_c1_y = abs(coord_dofs[3][1] - coord_dofs[1][1])

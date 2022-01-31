@@ -52,7 +52,7 @@ class CreateData:
             ############### End lettura file ####################################
 
             ################### Creazione elementi dataset ##########################
-            #### GNN connectivity #####
+            #### iterative tool used ####
             collapsed_space = Space.sub(0).collapse()
             dofmap = collapsed_space.dofmap()
 

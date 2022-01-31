@@ -68,9 +68,11 @@ class CreateData:
             ####definisco le node features della gnn #####
             coord = []
             coord_temp = list(collapsed_space.tabulate_dof_coordinates().tolist())
-            for i in coord_temp:
-                if i not in coord:
-                    coord.append(i)
+            with Bar("coordinate...", max=len(coord_temp)) as bar5:
+                for i in coord_temp:
+                    bar5.next()
+                    if i not in coord:
+                        coord.append(i)
 
             U = []
             F = []

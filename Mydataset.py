@@ -101,6 +101,6 @@ class MyOwnDataset(InMemoryDataset):
         else:
             torch.save(self.collate(data_list), self.processed_paths[2])
 
-        set_trace()
+        # set_trace()
 
 

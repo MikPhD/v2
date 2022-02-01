@@ -19,6 +19,15 @@ class CreateData:
         parameters["form_compiler"]["cpp_optimize"] = True
         parameters["std_out_all_processes"] = False
 
+    def create_connection(self, dofs_list, coord_dofs, node1, node2):
+        c = [dofs_list[node1]/2, dofs_list[node2]/2]
+
+        dist_c_x = abs(coord_dofs[node1][0] - coord_dofs[node2][0])
+        dist_c_y = abs(coord_dofs[node1][1] - coord_dofs[node2][1])
+        dist_c = [dist_c_x, dist_c_y]
+
+        return c, dist_c
+
     def transform(self, cases, mode):
         for h in cases:
             #####initializing###
@@ -52,85 +61,75 @@ class CreateData:
             ############### End lettura file ####################################
 
             ################### Creazione elementi dataset ##########################
-            #### GNN connectivity #####
+            #### iterative tool used ####
             collapsed_space = Space.sub(0).collapse()
             dofmap = collapsed_space.dofmap()
 
-            C_temp = [] ##connection list
+            ####definisco le node features della gnn #####
+            coord = []
+            coord_temp = list(collapsed_space.tabulate_dof_coordinates().tolist())
+            with Bar("coordinate...", max=len(coord_temp)) as bar5:
+                for i in coord_temp:
+                    bar5.next()
+                    if i not in coord:
+                        coord.append(i)
+
+            U = []
+            F = []
+            for x in coord:
+                U.append(list(u(np.array(x))))
+                F.append(list(forc(np.array(x))))
+
+            #### GNN connectivity #####
+            C = [] ##connection list
             D = [] ##distances between connection
             with Bar("Creazione connessioni...", max=mesh.num_cells()) as bar:
                 for i, j in enumerate(cells(mesh)):
                     bar.next()
 
                     c0 = Cell(mesh, i)
-                    dofs_list = dofmap.cell_dofs(c0.index())
-                    coord_dofs = collapsed_space.element().tabulate_dof_coordinates(c0)
-                    c1 = [int((dofs_list[3])/2), int((dofs_list[1])/2)]
-                    c2 = [int((dofs_list[3])/2), int((dofs_list[2])/2)]
-                    c3 = [int((dofs_list[4])/2), int((dofs_list[0])/2)]
-                    c4 = [int((dofs_list[4])/2), int((dofs_list[2])/2)]
-                    c5 = [int((dofs_list[5])/2), int((dofs_list[0])/2)]
-                    c6 = [int((dofs_list[5])/2), int((dofs_list[1])/2)]
 
-                    dist_c1_x = abs(coord_dofs[3][0] - coord_dofs[1][0])
-                    dist_c1_y = abs(coord_dofs[3][1] - coord_dofs[1][1])
-                    dist_c1 = [dist_c1_x, dist_c1_y]
+                    #### dofs list and coordinates - remove odds ####
+                    dofs_list_tot = dofmap.cell_dofs(c0.index())
+                    coord_dofs_tot = collapsed_space.element().tabulate_dof_coordinates(c0)
+                    dofs_list = []
+                    coord_dofs = []
 
-                    dist_c2_x = abs(coord_dofs[3][0] - coord_dofs[2][0])
-                    dist_c2_y = abs(coord_dofs[3][1] - coord_dofs[2][1])
-                    dist_c2 = [dist_c2_x, dist_c2_y]
-                    #
-                    dist_c3_x = abs(coord_dofs[4][0] - coord_dofs[0][0])
-                    dist_c3_y = abs(coord_dofs[4][1] - coord_dofs[0][1])
-                    dist_c3 = [dist_c3_x, dist_c3_y]
+                    for i, j in enumerate(dofs_list_tot):
+                        if j % 2 == 0:
+                            dofs_list.append(j)
+                            coord_dofs.append(list(coord_dofs_tot[i]))
 
-                    dist_c4_x = abs(coord_dofs[4][0] - coord_dofs[2][0])
-                    dist_c4_y = abs(coord_dofs[4][1] - coord_dofs[2][1])
-                    dist_c4 = [dist_c4_x, dist_c4_y]
+                    #### create unidirectional connection ####
+                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, int(3), int(1))
+                    if (c != None) and c not in C:
+                        C.append(c)
+                        D.append(d)
 
-                    dist_c5_x = abs(coord_dofs[5][0] - coord_dofs[0][0])
-                    dist_c5_y = abs(coord_dofs[5][1] - coord_dofs[0][1])
-                    dist_c5 = [dist_c5_x, dist_c5_y]
+                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, int(3), int(2))
+                    if (c != None) and c not in C:
+                        C.append(c)
+                        D.append(d)
 
-                    dist_c6_x = abs(coord_dofs[5][0] - coord_dofs[1][0])
-                    dist_c6_y = abs(coord_dofs[5][1] - coord_dofs[1][1])
-                    dist_c6 = [dist_c6_x, dist_c6_y]
+                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, int(4), int(0))
+                    if (c != None) and c not in C:
+                        C.append(c)
+                        D.append(d)
 
-                    C_temp = list(itertools.chain(C_temp, [c1], [c2], [c3], [c4], [c5], [c6]))
-                    # D = list(itertools.chain(D, [dist_c1_x, dist_c1_y], [dist_c2_x, dist_c2_y], [dist_c3_x, dist_c3_y],
-                    #                          [dist_c4_x, dist_c4_y], [dist_c5_x, dist_c5_y], [dist_c6_x, dist_c6_y]))
+                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, int(4), int(2))
+                    if (c != None) and c not in C:
+                        C.append(c)
+                        D.append(d)
 
-                    D = list(itertools.chain(D, [dist_c1], [dist_c2], [dist_c3], [dist_c4], [dist_c5], [dist_c6]))
+                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, int(5), int(0))
+                    if (c != None) and c not in C:
+                        C.append(c)
+                        D.append(d)
 
-                ############## remove duplicate ####################
-                C = []
-                remove = []
-                with Bar("Rimozione duplicati connessione...", max=len(C_temp)) as bar2:
-                    for i, j in enumerate(C_temp, start=0):
-                        bar2.next()
-                        if j not in C:
-                            C.append(j)
-                        else:
-                            remove.append(i)
-
-                with Bar("Rimozione duplicati distanze...", max=len(remove)) as bar3:
-                    for index in sorted(remove, reverse=True):
-                        del D[index]
-
-
-            ####definisco le node features della gnn #####
-            coord = []
-            coord_temp = list(collapsed_space.tabulate_dof_coordinates().tolist())
-            for i in coord_temp:
-                if i not in coord:
-                    coord.append(i)
-
-            U = []
-            F = []
-
-            for x in coord:
-              U.append(list(u(np.array(x))))
-              F.append(list(forc(np.array(x))))
+                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, int(5), int(1))
+                    if (c != None) and c not in C:
+                        C.append(c)
+                        D.append(d)
 
             ######################### Fine creazione elementi############################
 
@@ -146,4 +145,4 @@ class CreateData:
             ################# Fine salvataggio file ##################################
 
         ################# Print interface ########################################
-        print("Trasformazione file di " + mode + " completata!")#
+        print("Trasformazione file di " + mode + " completata!")

@@ -8,11 +8,10 @@ import torch
 from torch_geometric.data import DataListLoader
 from torch_geometric.data import DataLoader
 from torch_geometric.nn import DataParallel
-import torch_geometric.transforms as T
 from pdb import set_trace
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-e', '--n_epoch', help='epoch number', type=int, default=1)
+parser.add_argument('-e', '--n_epoch', help='epoch number', type=int, default=10)
 parser.add_argument('-r', '--restart', type=eval, default=False, choices=[True, False], help='Restart training option')
 args = parser.parse_args()
 
@@ -20,11 +19,11 @@ n_epoch = args.n_epoch
 restart = args.restart
 
 # train_cases = ['40','50','60','70','80','90','100','120','130','140','150']
-train_cases = ['40']
-val_cases = ['40']
+train_cases = ['110']
+val_cases = ['110']
 test_cases = ['110']
 
-print("#################### DATA ADAPTING FOR GNN #######################")
+# print("#################### DATA ADAPTING FOR GNN #######################")
 # createdata = CreateData()
 # createdata.transform(train_cases, 'train')
 # createdata.transform(val_cases, 'val')

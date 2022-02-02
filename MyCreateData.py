@@ -19,25 +19,34 @@ class CreateData:
         parameters["form_compiler"]["cpp_optimize"] = True
         parameters["std_out_all_processes"] = False
 
-    def bound_index_list(self, coord_dofs, bmesh, bound_index):
-        for n, x in enumerate(coord_dofs):
-            if x in bmesh:
-                bound_index.append(n)
-        return bound_index
+    # def bound_index_list(self, coord_dofs, bmesh, bound_index):
+    #     for n, x in enumerate(coord_dofs):
+    #         if x in bmesh:
+    #             bound_index.append(n)
+    #     return bound_index
 
-    def create_connection(self, dofs_list, coord_dofs, bound_index, node1, node2):
-        if node1 in bound_index:
-            if node2 in bound_index:
-                # print("entrambi sul bordo!", node1, node2)
-                return None, None
-        else:
-            c = [dofs_list[node1]/2, dofs_list[node2]/2]
+    # def create_connection(self, dofs_list, coord_dofs, bound_index_cell, node1, node2):
+    #     if node1 in bound_index_cell:
+    #         if node2 in bound_index_cell:
+    #             # print("entrambi sul bordo!", node1, node2)
+    #             return None, None
+    #     else:
+    #         c = [dofs_list[node1]/2, dofs_list[node2]/2]
+    #
+    #         dist_c_x = abs(coord_dofs[node1][0] - coord_dofs[node2][0])
+    #         dist_c_y = abs(coord_dofs[node1][1] - coord_dofs[node2][1])
+    #         dist_c = [dist_c_x, dist_c_y]
+    #
+    #         return c, dist_c
+    def create_connection(self, dofs_list_cell, coord_dofs_cell, node1, node2):
+        c = [dofs_list_cell[node1] / 2, dofs_list_cell[node2] / 2]
+        c_rev = c[::-1]
 
-            dist_c_x = abs(coord_dofs[node1][0] - coord_dofs[node2][0])
-            dist_c_y = abs(coord_dofs[node1][1] - coord_dofs[node2][1])
-            dist_c = [dist_c_x, dist_c_y]
+        dist_c_x = abs(coord_dofs_cell[node1][0] - coord_dofs_cell[node2][0])
+        dist_c_y = abs(coord_dofs_cell[node1][1] - coord_dofs_cell[node2][1])
+        dist_c = [dist_c_x, dist_c_y]
 
-            return c, dist_c
+        return c, c_rev, dist_c
 
     def transform(self, cases, mode):
         for h in cases:
@@ -95,6 +104,9 @@ class CreateData:
 
             bmesh = BoundaryMesh(mesh, "exterior", True).coordinates()
 
+            dofs_list = []
+            coord_dofs = []
+
             with Bar("Creazione connessioni...", max=mesh.num_cells()) as bar:
                 for i, j in enumerate(cells(mesh)):
                     bar.next()
@@ -102,23 +114,29 @@ class CreateData:
                     c0 = Cell(mesh, i)
 
                     #### dofs list and coordinates - remove odds ####
-                    dofs_list_tot = dofmap.cell_dofs(c0.index())
-                    coord_dofs_tot = collapsed_space.element().tabulate_dof_coordinates(c0)
-                    dofs_list = []
-                    coord_dofs = []
+                    dofs_list_cell_tot = dofmap.cell_dofs(c0.index())
+                    coord_dofs_cell_tot = collapsed_space.element().tabulate_dof_coordinates(c0)
+                    dofs_list_cell = []
+                    coord_dofs_cell = []
 
-                    for i, j in enumerate(dofs_list_tot):
+                    for i, j in enumerate(dofs_list_cell_tot):
                         if j % 2 == 0:
-                            dofs_list.append(j)
-                            coord_dofs.append(list(coord_dofs_tot[i]))
+                            dofs_list_cell.append(j)
+                            coord_dofs_cell.append(list(coord_dofs_cell_tot[i]))
 
-                    ###### Vertex on boundary - dofs index on boundary ######
-                    bound_index = []
-                    bound_index = CreateData.bound_index_list(self, coord_dofs, bmesh, bound_index)
+###### devo iterare sempre all'interno di ogni cella per creare le connessioni
+###### ma devo evitare i duplicati tra le celle
+###### ed evitare di creare le connessioni tra i nodi!!!!
+
+                    # ###### Vertex on boundary - dofs index on boundary ######
+                    # bound_index_cell = []
+                    # for n, x in enumerate(coord_dofs_cell):
+                    #     if x in bmesh:
+                    #         bound_index_cell.append(n)
 
                     #### create unidirectional connection ####
-                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, bound_index, int(3), int(1))
-                    if (c != None) and c not in C:
+                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, int(3), int(1))
+                    if (c != None) and c not in C: ### cosi non vede i reverse! continuare da qua
                         C.append(c)
                         D.append(d)
 
@@ -146,6 +164,14 @@ class CreateData:
                     if (c != None) and c not in C:
                         C.append(c)
                         D.append(d)
+
+
+                    for x in coord_dofs:
+                        if x[0] == 0:
+                            onbound.append(x)
+                            if x in bmesh:
+                                count += 1
+                    # print(onbound)
 
                     # c1 = [dofs_list[3], dofs_list[1]]
                     # c2 = [dofs_list[3], dofs_list[2]]
@@ -229,7 +255,7 @@ class CreateData:
             C += C_rev
             D += D
 
-            # set_trace()
+            set_trace()
             ######################### Fine creazione elementi############################
 
             ###################### Salvataggio file Numpy ##############################

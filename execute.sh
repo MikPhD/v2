@@ -1,5 +1,5 @@
 #!/bin/sh
-#SBATCH -J casev2
+#SBATCH -J casev2_man_undir
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=64G
@@ -11,4 +11,4 @@
 #SBATCH -o logs/case.out
 #SBATCH -e logs/case.err
 
-srun python Main.py -e 300000
+srun python Main.py -e 30000

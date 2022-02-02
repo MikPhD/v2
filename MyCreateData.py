@@ -19,11 +19,11 @@ class CreateData:
         parameters["form_compiler"]["cpp_optimize"] = True
         parameters["std_out_all_processes"] = False
 
-    def create_connection(self, dofs_list, coord_dofs, node1, node2):
-        c = [dofs_list[node1]/2, dofs_list[node2]/2]
+    def create_connection(self, dofs_list_cell, coord_dofs_cell, node1, node2):
+        c = [int(dofs_list_cell[node1] / 2), int(dofs_list_cell[node2] / 2)]
 
-        dist_c_x = abs(coord_dofs[node1][0] - coord_dofs[node2][0])
-        dist_c_y = abs(coord_dofs[node1][1] - coord_dofs[node2][1])
+        dist_c_x = abs(coord_dofs_cell[node1][0] - coord_dofs_cell[node2][0])
+        dist_c_y = abs(coord_dofs_cell[node1][1] - coord_dofs_cell[node2][1])
         dist_c = [dist_c_x, dist_c_y]
 
         return c, dist_c
@@ -68,9 +68,9 @@ class CreateData:
             ####definisco le node features della gnn #####
             coord = []
             coord_temp = list(collapsed_space.tabulate_dof_coordinates().tolist())
-            with Bar("coordinate...", max=len(coord_temp)) as bar5:
+            with Bar("Creazione coordinate univoche...", max=len(coord_temp)) as bar2:
                 for i in coord_temp:
-                    bar5.next()
+                    bar2.next()
                     if i not in coord:
                         coord.append(i)
 
@@ -83,50 +83,51 @@ class CreateData:
             #### GNN connectivity #####
             C = [] ##connection list
             D = [] ##distances between connection
+
             with Bar("Creazione connessioni...", max=mesh.num_cells()) as bar:
                 for i, j in enumerate(cells(mesh)):
                     bar.next()
 
                     c0 = Cell(mesh, i)
 
-                    #### dofs list and coordinates - remove odds ####
-                    dofs_list_tot = dofmap.cell_dofs(c0.index())
-                    coord_dofs_tot = collapsed_space.element().tabulate_dof_coordinates(c0)
-                    dofs_list = []
-                    coord_dofs = []
+                    #### dofs list and coordinates for each cell - remove odds ####
+                    dofs_list_cell_tot = dofmap.cell_dofs(c0.index())
+                    coord_dofs_cell_tot = collapsed_space.element().tabulate_dof_coordinates(c0)
+                    dofs_list_cell = []
+                    coord_dofs_cell = []
 
-                    for i, j in enumerate(dofs_list_tot):
+                    for i, j in enumerate(dofs_list_cell_tot):
                         if j % 2 == 0:
-                            dofs_list.append(j)
-                            coord_dofs.append(list(coord_dofs_tot[i]))
+                            dofs_list_cell.append(j)
+                            coord_dofs_cell.append(list(coord_dofs_cell_tot[i]))
 
-                    #### create unidirectional connection ####
-                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, int(3), int(1))
+                    #### create monodirectional connection ####
+                    c, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, int(3), int(1))
                     if (c != None) and c not in C:
                         C.append(c)
                         D.append(d)
 
-                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, int(3), int(2))
+                    c, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, int(3), int(2))
                     if (c != None) and c not in C:
                         C.append(c)
                         D.append(d)
 
-                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, int(4), int(0))
+                    c, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, int(4), int(0))
                     if (c != None) and c not in C:
                         C.append(c)
                         D.append(d)
 
-                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, int(4), int(2))
+                    c, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, int(4), int(2))
                     if (c != None) and c not in C:
                         C.append(c)
                         D.append(d)
 
-                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, int(5), int(0))
+                    c, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, int(5), int(0))
                     if (c != None) and c not in C:
                         C.append(c)
                         D.append(d)
 
-                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, int(5), int(1))
+                    c, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, int(5), int(1))
                     if (c != None) and c not in C:
                         C.append(c)
                         D.append(d)
@@ -145,4 +146,4 @@ class CreateData:
             ################# Fine salvataggio file ##################################
 
         ################# Print interface ########################################
-        print("Trasformazione file di " + mode + " completata!")
+        print("Trasformazione file di " + mode + " completata!")#

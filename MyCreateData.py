@@ -38,15 +38,20 @@ class CreateData:
     #         dist_c = [dist_c_x, dist_c_y]
     #
     #         return c, dist_c
-    def create_connection(self, dofs_list_cell, coord_dofs_cell, node1, node2):
-        c = [dofs_list_cell[node1] / 2, dofs_list_cell[node2] / 2]
-        c_rev = c[::-1]
+    def create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, node1, node2):
+        if node1 in bound_index_cell:
+            if node2 in bound_index_cell:
+                        # print("entrambi sul boundary!", node1, node2)
+                        return None, None, None
+        else:
+            c = [int(dofs_list_cell[node1] / 2), int(dofs_list_cell[node2] / 2)]
+            c_rev = c[::-1]
 
-        dist_c_x = abs(coord_dofs_cell[node1][0] - coord_dofs_cell[node2][0])
-        dist_c_y = abs(coord_dofs_cell[node1][1] - coord_dofs_cell[node2][1])
-        dist_c = [dist_c_x, dist_c_y]
+            dist_c_x = abs(coord_dofs_cell[node1][0] - coord_dofs_cell[node2][0])
+            dist_c_y = abs(coord_dofs_cell[node1][1] - coord_dofs_cell[node2][1])
+            dist_c = [dist_c_x, dist_c_y]
 
-        return c, c_rev, dist_c
+            return c, c_rev, dist_c
 
     def transform(self, cases, mode):
         for h in cases:
@@ -102,10 +107,9 @@ class CreateData:
             C = [] ##connection list
             D = [] ##distances between connection
 
-            bmesh = BoundaryMesh(mesh, "exterior", True).coordinates()
+            # bmesh = BoundaryMesh(mesh, "exterior", True).coordinates()
 
-            dofs_list = []
-            coord_dofs = []
+            # dofs_on_bound =[]
 
             with Bar("Creazione connessioni...", max=mesh.num_cells()) as bar:
                 for i, j in enumerate(cells(mesh)):
@@ -113,7 +117,7 @@ class CreateData:
 
                     c0 = Cell(mesh, i)
 
-                    #### dofs list and coordinates - remove odds ####
+                    #### dofs list and coordinates for each cell - remove odds ####
                     dofs_list_cell_tot = dofmap.cell_dofs(c0.index())
                     coord_dofs_cell_tot = collapsed_space.element().tabulate_dof_coordinates(c0)
                     dofs_list_cell = []
@@ -124,138 +128,77 @@ class CreateData:
                             dofs_list_cell.append(j)
                             coord_dofs_cell.append(list(coord_dofs_cell_tot[i]))
 
-###### devo iterare sempre all'interno di ogni cella per creare le connessioni
-###### ma devo evitare i duplicati tra le celle
-###### ed evitare di creare le connessioni tra i nodi!!!!
-
-                    # ###### Vertex on boundary - dofs index on boundary ######
+                    # ###### dofs index on boundary ######
                     # bound_index_cell = []
                     # for n, x in enumerate(coord_dofs_cell):
                     #     if x in bmesh:
                     #         bound_index_cell.append(n)
 
-                    #### create unidirectional connection ####
-                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, int(3), int(1))
-                    if (c != None) and c not in C: ### cosi non vede i reverse! continuare da qua
-                        C.append(c)
-                        D.append(d)
-
-                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, bound_index, int(3), int(2))
+                    #### create monodirectional connection ####
+                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, int(3), int(1))
                     if (c != None) and c not in C:
                         C.append(c)
+                        C.append(c_rev)
+                        D.append(d)
                         D.append(d)
 
-                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, bound_index, int(4), int(0))
+                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, int(3), int(2))
                     if (c != None) and c not in C:
                         C.append(c)
+                        C.append(c_rev)
+                        D.append(d)
                         D.append(d)
 
-                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, bound_index, int(4), int(2))
+                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, int(4), int(0))
                     if (c != None) and c not in C:
                         C.append(c)
+                        C.append(c_rev)
+                        D.append(d)
                         D.append(d)
 
-                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, bound_index, int(5), int(0))
+                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, int(4), int(2))
                     if (c != None) and c not in C:
                         C.append(c)
+                        C.append(c_rev)
+                        D.append(d)
                         D.append(d)
 
-                    c, d = CreateData.create_connection(self, dofs_list, coord_dofs, bound_index, int(5), int(1))
+                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, int(5), int(0))
                     if (c != None) and c not in C:
                         C.append(c)
+                        C.append(c_rev)
+                        D.append(d)
                         D.append(d)
 
+                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, int(5), int(1))
+                    if (c != None) and c not in C:
+                        C.append(c)
+                        C.append(c_rev)
+                        D.append(d)
+                        D.append(d)
 
-                    for x in coord_dofs:
-                        if x[0] == 0:
-                            onbound.append(x)
-                            if x in bmesh:
-                                count += 1
-                    # print(onbound)
+                    # for x in coord_dofs_cell:
+                    #     if x[0] == 0:
+                    #         if x not in dofs_on_bound:
+                    #             dofs_on_bound.append(x)
 
-                    # c1 = [dofs_list[3], dofs_list[1]]
-                    # c2 = [dofs_list[3], dofs_list[2]]
-                    #
-                    # dist_c1_x = abs(coord_dofs[3][0] - coord_dofs[1][0])
-                    # dist_c1_y = abs(coord_dofs[3][1] - coord_dofs[1][1])
-                    # dist_c1 = [dist_c1_x, dist_c1_y]
-                    #
-                    # dist_c2_x = abs(coord_dofs[3][0] - coord_dofs[2][0])
-                    # dist_c2_y = abs(coord_dofs[3][1] - coord_dofs[2][1])
-                    # dist_c2 = [dist_c2_x, dist_c2_y]
-                    #
-                    # c3 = [dofs_list[4], dofs_list[0]]
-                    # c4 = [dofs_list[4], dofs_list[2]]
-                    #
-                    # dist_c3_x = abs(coord_dofs[4][0] - coord_dofs[0][0])
-                    # dist_c3_y = abs(coord_dofs[4][1] - coord_dofs[0][1])
-                    # dist_c3 = [dist_c3_x, dist_c3_y]
-                    #
-                    # dist_c4_x = abs(coord_dofs[4][0] - coord_dofs[2][0])
-                    # dist_c4_y = abs(coord_dofs[4][1] - coord_dofs[2][1])
-                    # dist_c4 = [dist_c4_x, dist_c4_y]
-                    #
-                    # c5 = [dofs_list[5], dofs_list[0]]
-                    # c6 = [dofs_list[5], dofs_list[1]]
-                    #
-                    # dist_c5_x = abs(coord_dofs[5][0] - coord_dofs[0][0])
-                    # dist_c5_y = abs(coord_dofs[5][1] - coord_dofs[0][1])
-                    # dist_c5 = [dist_c5_x, dist_c5_y]
-                    #
-                    # dist_c6_x = abs(coord_dofs[5][0] - coord_dofs[1][0])
-                    # dist_c6_y = abs(coord_dofs[5][1] - coord_dofs[1][1])
-                    # dist_c6 = [dist_c6_x, dist_c6_y]
-                    #
-                    # if c1 not in C:
-                    #     C.append(c1)
-                    #     D.append(dist_c1)
-                    # if c2 not in C:
-                    #     C.append(c2)
-                    #     D.append(dist_c2)
-                    # if c3 not in C:
-                    #     C.append(c3)
-                    #     D.append(dist_c3)
-                    # if c4 not in C:
-                    #     C.append(c4)
-                    #     D.append(dist_c4)
-                    # if c5 not in C:
-                    #     C.append(c5)
-                    #     D.append(dist_c5)
-                    # if c6 not in C:
-                    #     C.append(c6)
-                    #     D.append(dist_c6)
-                    #
-                    # C_temp = list(itertools.chain(C_temp, [c1], [c2], [c3], [c4], [c5], [c6]))
-                    # # D = list(itertools.chain(D, [dist_c1_x, dist_c1_y], [dist_c2_x, dist_c2_y], [dist_c3_x, dist_c3_y],
-                    # #                          [dist_c4_x, dist_c4_y], [dist_c5_x, dist_c5_y], [dist_c6_x, dist_c6_y]))
-                    #
-                    # D = list(itertools.chain(D, [dist_c1], [dist_c2], [dist_c3], [dist_c4], [dist_c5], [dist_c6]))
 
-            # ############## remove duplicate ####################
-            # C = []
-            # remove = []
-            # with Bar("Rimozione duplicati connessione...", max=len(C_temp)) as bar2:
-            #     for i, j in enumerate(C_temp, start=0):
-            #         bar2.next()
-            #         if j not in C:
-            #             C.append(j)
-            #         else:
-            #             remove.append(i)
+            # C_prov = []
+            # for x in C:
+            #     if x not in C_prov:
+            #         C_prov.append(x)
+            #
+            # D_prov = []
+            # for x in D:
+            #     if x not in D_prov:
+            #         D_prov.append(x)
+            #
+            # bmesh_onbound = []
+            # for x in bmesh:
+            #     if x[0] == 0:
+            #         bmesh_onbound.append(x)
 
-            # with Bar("Rimozione duplicati distanze...", max=len(remove)) as bar3:
-            #     for index in sorted(remove, reverse=True):
-            #         del D[index]
-
-            C_rev = []
-            with Bar("Creazione doppia direzionalità...", max=len(C)) as bar4:
-                for i in range(len(C)):
-                    bar4.next()
-                    C_rev.append(C[i][::-1])
-
-            C += C_rev
-            D += D
-
-            set_trace()
+            # set_trace()
             ######################### Fine creazione elementi############################
 
             ###################### Salvataggio file Numpy ##############################

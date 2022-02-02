@@ -1,5 +1,5 @@
 #!/bin/sh
-#SBATCH -J casev2
+#SBATCH -J casev2_main
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=64G

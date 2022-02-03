@@ -10,6 +10,7 @@ from pdb import set_trace
 from progress.bar import Bar
 import itertools
 import time
+import matplotlib.tri as tri
 
 class CreateData:
     def __init__(self):
@@ -38,6 +39,23 @@ class CreateData:
     #         dist_c = [dist_c_x, dist_c_y]
     #
     #         return c, dist_c
+    def mesh2triang(self, mesh):
+        xy = mesh.coordinates()
+        return tri.Triangulation(xy[:, 0], xy[:, 1], mesh.cells())
+
+    def plot(self, obj):
+        plt.gca().set_aspect('equal')
+        if isinstance(obj, Function):
+            mesh = obj.function_space().mesh()
+            if obj.vector().size() == mesh.num_cells():
+                C = obj.vector().array()
+                plt.tripcolor(self.mesh2triang(mesh), C)
+            else:
+                C = obj.compute_vertex_values(mesh)
+                plt.tripcolor(self.mesh2triang(mesh), C, shading='gouraud')
+        elif isinstance(obj, Mesh):
+            plt.triplot(self.mesh2triang(obj), color='k')
+
     def create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, node1, node2):
         if node1 in bound_index_cell:
             if node2 in bound_index_cell:
@@ -66,6 +84,7 @@ class CreateData:
                 h5file.read(mesh, "mesh", False)
                 facet = MeshFunction("size_t", mesh, mesh.topology().dim() - 1)
                 h5file.read(facet, "facet")
+
 
             ###### lettura risultati ########
             VelocityElement = VectorElement("CG", mesh.ufl_cell(), 2)
@@ -107,10 +126,49 @@ class CreateData:
             C = [] ##connection list
             D = [] ##distances between connection
 
-            # bmesh = BoundaryMesh(mesh, "exterior", True).coordinates()
+            bmesh = BoundaryMesh(mesh, "exterior", True).coordinates()
+            bmesh = bmesh.tolist()
 
-            # dofs_on_bound =[]
+            suppl_point = []
 
+            ###
+            mesh.init()
+            mesh_topology = mesh.topology()
+            mesh_connectivity = mesh_topology(1, 0)
+            with Bar("Creazione supplementary...", max=mesh.num_cells()) as bar2:
+                for i in range(mesh.num_edges()):
+                    bar2.next()
+                    connection = np.array(mesh_connectivity(i)).astype(int)
+                    coord_vert1 = (mesh.coordinates()[connection[0]]).tolist()
+                    coord_vert2 = (mesh.coordinates()[connection[1]]).tolist()
+
+                    if coord_vert1 in bmesh:
+                        if coord_vert2 in bmesh:
+                            coord_vert3_x = (coord_vert1[0] + coord_vert2[0])/2
+                            coord_vert3_y = (coord_vert1[1] + coord_vert2[1])/2
+                            suppl_point.append([coord_vert3_x, coord_vert3_y])
+
+            bmesh_x = []
+            bmesh_y = []
+            suppl_point_x = []
+            suppl_point_y = []
+            for i in bmesh:
+                bmesh_x.append(i[0])
+                bmesh_y.append(i[1])
+            for j in suppl_point:
+                suppl_point_x.append(j[0])
+                suppl_point_y.append(j[1])
+            plt.figure()
+            plot(mesh)
+            # plt.plot(bmesh_x, bmesh_y, 'r*')
+            plt.plot(suppl_point_x, suppl_point_y, 'g*')
+            # for i, j in zip(suppl_point_x, suppl_point_y):
+            #     plt.text(i, j, '({}, {})'.format(i, j))
+            plt.show()
+
+            set_trace()
+
+            dofs_on_bound = []
             with Bar("Creazione connessioni...", max=mesh.num_cells()) as bar:
                 for i, j in enumerate(cells(mesh)):
                     bar.next()
@@ -128,11 +186,11 @@ class CreateData:
                             dofs_list_cell.append(j)
                             coord_dofs_cell.append(list(coord_dofs_cell_tot[i]))
 
-                    # ###### dofs index on boundary ######
-                    # bound_index_cell = []
-                    # for n, x in enumerate(coord_dofs_cell):
-                    #     if x in bmesh:
-                    #         bound_index_cell.append(n)
+                    ###### dofs index on boundary ######
+                    bound_index_cell = []
+                    for n, x in enumerate(coord_dofs_cell):
+                        if x in bmesh:
+                            bound_index_cell.append(n)
 
                     #### create monodirectional connection ####
                     c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, int(3), int(1))
@@ -177,10 +235,10 @@ class CreateData:
                         D.append(d)
                         D.append(d)
 
-                    # for x in coord_dofs_cell:
-                    #     if x[0] == 0:
-                    #         if x not in dofs_on_bound:
-                    #             dofs_on_bound.append(x)
+                    for x in coord_dofs_cell:
+                        if x[0] == 0:
+                            if x not in dofs_on_bound:
+                                dofs_on_bound.append(x)
 
 
             # C_prov = []
@@ -193,12 +251,12 @@ class CreateData:
             #     if x not in D_prov:
             #         D_prov.append(x)
             #
-            # bmesh_onbound = []
-            # for x in bmesh:
-            #     if x[0] == 0:
-            #         bmesh_onbound.append(x)
+            bmesh_onbound = []
+            for x in bmesh:
+                if x[0] == 0:
+                    bmesh_onbound.append(x)
 
-            # set_trace()
+            set_trace()
             ######################### Fine creazione elementi############################
 
             ###################### Salvataggio file Numpy ##############################

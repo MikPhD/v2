@@ -79,59 +79,61 @@ class CreateData:
 
             C = [] #list of connection
             D = [] #lenght of connection in coordinates
-            with Bar("Creazione connection, distances, value of function...", max=mesh.num_edges()) as bar:
-                for i in range(mesh.num_edges()):
-                    bar.next()
-                    connection_mesh_index = np.array(mesh_connectivity(i)).astype(int)
-                    coord_vert1 = (mesh.coordinates()[connection_mesh_index[0]]).tolist()
-                    coord_vert2 = (mesh.coordinates()[connection_mesh_index[1]]).tolist()
+            # with Bar("Creazione connection, distances, value of function...", max=mesh.num_edges()) as bar:
+            for i in range(mesh.num_edges()):
+                if i % 100 == 0:
+                    print("Elaborazione in corso: {} su {}".format(i, mesh.num_edges()))
+                # bar.next()
+                connection_mesh_index = np.array(mesh_connectivity(i)).astype(int)
+                coord_vert1 = (mesh.coordinates()[connection_mesh_index[0]]).tolist()
+                coord_vert2 = (mesh.coordinates()[connection_mesh_index[1]]).tolist()
 
-                    ### find point of boundary ###
-                    if coord_vert1 and coord_vert2 in bmesh:
-                            pass
-                    else:
-                        #### create intermediate points ###
-                        coord_vert3_x = (coord_vert1[0] + coord_vert2[0]) / 2
-                        coord_vert3_y = (coord_vert1[1] + coord_vert2[1]) / 2
-                        coord_vert3 = [coord_vert3_x, coord_vert3_y]
+                ### find point of boundary ###
+                if coord_vert1 and coord_vert2 in bmesh:
+                        pass
+                else:
+                    #### create intermediate points ###
+                    coord_vert3_x = (coord_vert1[0] + coord_vert2[0]) / 2
+                    coord_vert3_y = (coord_vert1[1] + coord_vert2[1]) / 2
+                    coord_vert3 = [coord_vert3_x, coord_vert3_y]
 
-                        suppl_points.append(coord_vert3)  ##useless
-                        mesh_points.append(coord_vert3)
-                        ### create connection ####
-                        index1 = mesh_points.index(coord_vert1)
-                        index2 = mesh_points.index(coord_vert2)
-                        index3 = mesh_points.index(coord_vert3)
-                        connection1 = [index1, index3]
-                        connection2 = [index3, index2]
-                        C.append(connection1)
-                        C.append(connection2)
+                    suppl_points.append(coord_vert3)  ##useless
+                    mesh_points.append(coord_vert3)
+                    ### create connection ####
+                    index1 = mesh_points.index(coord_vert1)
+                    index2 = mesh_points.index(coord_vert2)
+                    index3 = mesh_points.index(coord_vert3)
+                    connection1 = [index1, index3]
+                    connection2 = [index3, index2]
+                    C.append(connection1)
+                    C.append(connection2)
 
-                        ### compute lenght of connection ###
-                        dist_c1_x = abs(coord_vert1[0] - coord_vert3[0])
-                        dist_c1_y = abs(coord_vert1[1] - coord_vert3[1])
-                        dist_c1 = [dist_c1_x, dist_c1_y]
+                    ### compute lenght of connection ###
+                    dist_c1_x = abs(coord_vert1[0] - coord_vert3[0])
+                    dist_c1_y = abs(coord_vert1[1] - coord_vert3[1])
+                    dist_c1 = [dist_c1_x, dist_c1_y]
 
-                        dist_c2_x = abs(coord_vert3[0] - coord_vert2[0])
-                        dist_c2_y = abs(coord_vert3[1] - coord_vert2[1])
-                        dist_c2 = [dist_c2_x, dist_c2_y]
-                        D.append(dist_c1)
+                    dist_c2_x = abs(coord_vert3[0] - coord_vert2[0])
+                    dist_c2_y = abs(coord_vert3[1] - coord_vert2[1])
+                    dist_c2 = [dist_c2_x, dist_c2_y]
+                    D.append(dist_c1)
+                    D.append(dist_c2)
+
+                    if coord_vert1 in bmesh:
+                        connection3 = [index2, index3]
+                        C.append(connection3)
                         D.append(dist_c2)
 
-                        if coord_vert1 in bmesh:
-                            connection3 = [index2, index3]
-                            C.append(connection3)
-                            D.append(dist_c2)
+                    if coord_vert2 in bmesh:
+                        connection4 = [index1, index3]
+                        C.append(connection4)
+                        D.append(dist_c1)
 
-                        if coord_vert2 in bmesh:
-                            connection4 = [index1, index3]
-                            C.append(connection4)
-                            D.append(dist_c1)
-
-                U = []
-                F = []
-                for x in mesh_points:
-                    U.append(list(u(np.array(x))))
-                    F.append(list(forc(np.array(x))))
+            U = []
+            F = []
+            for x in mesh_points:
+                U.append(list(u(np.array(x))))
+                F.append(list(forc(np.array(x))))
 
             # set_trace()
 

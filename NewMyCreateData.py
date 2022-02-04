@@ -4,8 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pdb import set_trace
 import matplotlib.tri as tri
-
-
+import os
 
 class CreateData:
     def __init__(self):
@@ -134,6 +133,20 @@ class CreateData:
             for x in mesh_points:
                 U.append(list(u(np.array(x))))
                 F.append(list(forc(np.array(x))))
+
+            ###################### Salvataggio file Numpy ##############################
+            os.makedirs("./dataset/raw/" + mode + "/" + h, exist_ok=True)
+            specific_dir = "./dataset/raw/" + mode + "/" + h
+            np.save(specific_dir + "/C.npy", C)
+            np.save(specific_dir + "/D.npy", D)
+            np.save(specific_dir + "/U.npy", U)
+            np.save(specific_dir + "/F.npy", F)
+            # np.save(specific_dir + "/coord.npy", coord)
+            np.save(specific_dir + "/re.npy", int(h))
+            ################# Fine salvataggio file ##################################
+
+        ################# Print interface ########################################
+        print("Trasformazione file di " + mode + " completata!")
 
             # set_trace()
 

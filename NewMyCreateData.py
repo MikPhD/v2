@@ -66,7 +66,7 @@ class CreateData:
             ############### End lettura file ####################################
 
             ################### Creazione elementi dataset ##########################
-            #### lista delle connessioni ###
+            #### lista delle connessioni della mesh ###
             mesh_points = mesh.coordinates().tolist()
             bmesh = BoundaryMesh(mesh, "exterior", True).coordinates().tolist()
 
@@ -79,7 +79,7 @@ class CreateData:
 
             C = [] #list of connection
             D = [] #lenght of connection in coordinates
-            with Bar("Creazione supplementary...", max=mesh.num_edges()) as bar:
+            with Bar("Creazione connection, distances, value of function...", max=mesh.num_edges()) as bar:
                 for i in range(mesh.num_edges()):
                     bar.next()
                     connection_mesh_index = np.array(mesh_connectivity(i)).astype(int)
@@ -119,21 +119,45 @@ class CreateData:
 
                         if coord_vert1 in bmesh:
                             connection3 = [index2, index3]
+                            C.append(connection3)
+                            D.append(dist_c2)
+
                         if coord_vert2 in bmesh:
                             connection4 = [index1, index3]
+                            C.append(connection4)
+                            D.append(dist_c1)
 
-                            #####aggiungere connessioni alla lista delle connessioni##
-                            #### creare connessione per edge interni
+                U = []
+                F = []
+                for x in mesh_points:
+                    U.append(list(u(np.array(x))))
+                    F.append(list(forc(np.array(x))))
 
             # set_trace()
 
-
-            plt.figure()
-            plot(mesh)
-            for x, y in mesh_points:
-                plt.plot(x, y, 'r*')
-            for x, y in suppl_points:
-                plt.plot(x, y, 'g*')
-            for x, y in bmesh:
-                plt.plot(x, y, 'b*')
-            plt.show()
+            # plt.figure()
+            # plot(mesh)
+            # # # for x, y in mesh_points:
+            # # #     plt.plot(x, y, 'r*')
+            # # # for x, y in suppl_points:
+            # # #     plt.plot(x, y, 'g*')
+            # # # for x, y in bmesh:
+            # # #     plt.plot(x, y, 'b*')
+            # # x = []
+            # # y = []
+            # for i, (index1, index2) in enumerate(C[0:200]):
+            #     xv1 = mesh_points[index1][0]
+            #     yv1 = mesh_points[index1][1]
+            #     xv2 = mesh_points[index2][0]
+            #     yv2 = mesh_points[index2][1]
+            #     xmean = (xv1+xv2)/2
+            #     ymean = (yv1+yv2)/2
+            #
+            #     u = xv2-xv1
+            #     v = yv2-yv1
+            #
+            #     plt.plot([xv1,xv2], [yv1, yv2], 'ro-', label=i)
+            #     plt.annotate(i, xy=(xmean, ymean), xycoords='data')
+            #     plt.quiver(xmean, ymean, u, v)
+            # #
+            # plt.show()

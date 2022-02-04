@@ -23,10 +23,10 @@ train_cases = ['110']
 val_cases = ['110']
 test_cases = ['110']
 
-# print("#################### DATA ADAPTING FOR GNN #######################")
-# createdata = CreateData()
-# createdata.transform(train_cases, 'train')
-# createdata.transform(val_cases, 'val')
+print("#################### DATA ADAPTING FOR GNN #######################")
+#createdata = CreateData()
+#createdata.transform(train_cases, 'train')
+#createdata.transform(val_cases, 'val')
 
 
 print("#################### CREATING Inner DATASET #######################")

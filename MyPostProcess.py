@@ -13,6 +13,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
+from progress.bar import Bar
+
 
 from collections import OrderedDict
 
@@ -67,16 +69,12 @@ def plot(obj):
         plt.triplot(mesh2triang(obj), color='k')
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--case_num', help='case number', type=str, default="40")
+parser.add_argument('-i', '--case_num', help='case number', type=str, default="110")
 parser.add_argument('-n', '--n_epoch', help='num epoch', type=str, default="")
 args = parser.parse_args()
 
 case_num = args.case_num
 n_epoch = args.n_epoch
-
-directory = "./processed/train/" + case_num + "/"
-
-
 
 ####### loading mesh ########
 mesh = Mesh()
@@ -96,34 +94,36 @@ F = Function(Space)
 f, _ = F.split(deepcopy=True)
 f.set_allow_extrapolation(True)
 
-with HDF5File(MPI.comm_world, "../Dataset/" + case_num + "/Results.h5", "r") as h5file:
-    h5file.read(f, "mean")
-    # h5file.read(f, "forcing")
+# with HDF5File(MPI.comm_world, "../Dataset/" + case_num + "/Results.h5", "r") as h5file:
+#     h5file.read(f, "mean")
+#     # h5file.read(f, "forcing")
 
 
 # ####### loading forcing from GNN ################
 F_gnn = np.load('./Results/' + 'results.npy').flatten()
+mesh_points = np.load('./dataset/raw/train/' + case_num + '/mesh_points.npy').tolist()
+
+dofs_coordinates_prev = Space.sub(0).collapse().tabulate_dof_coordinates().tolist()
+
+# dofs_coordinates = []
+# with Bar("Creazione connessioni...", max=len(dofs_coordinates_prev)) as bar:
+#     for i in dofs_coordinates_prev:
+#         bar.next()
+#         if i not in dofs_coordinates:
+#             dofs_coordinates.append(i)
+
 # set_trace()
+with Bar("Creazione connessioni...", max=len(mesh_points)) as bar:
 
-# collapsed_space = Space.sub(0).collapse()
-# coord = list(collapsed_space.tabulate_dof_coordinates().tolist())
-# for i, x in enumerate(coord):
-#     f(x) = F_gnn[i]
+    for i, x in enumerate(mesh_points):
+        bar.next()
+        index = dofs_coordinates_prev.index(x)
+        f.vector()[(index)] = F_gnn[i*2]
+        f.vector()[(index)+1] = F_gnn[(i*2)+1]
 
-# set_trace()
-
-# for i, x in enumerate(F_gnn):
-#     f.vector()[i] = x
-#     # print(i,x)
-
-# f.vector().set_local(F_gnn)
-
-bmesh = sorted(BoundaryMesh(mesh, "exterior", True).coordinates().tolist())
-
-F = []
-for x in bmesh:
-    F.append(list(f(np.array(x))))
-    print('coordinate {} valore {}'.format(x, list(f(np.array(x)))))
+bmesh = BoundaryMesh(mesh, "exterior", True).coordinates().tolist()
+for i in bmesh:
+    print(f(i))
 set_trace()
 plot(f.sub(0))
 plt.show()

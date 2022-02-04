@@ -143,6 +143,7 @@ class CreateData:
             np.save(specific_dir + "/F.npy", F)
             # np.save(specific_dir + "/coord.npy", coord)
             np.save(specific_dir + "/re.npy", int(h))
+            np.save(specific_dir + "/mesh_points", mesh_points)
             ################# Fine salvataggio file ##################################
 
         ################# Print interface ########################################

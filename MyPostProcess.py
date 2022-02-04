@@ -1,3 +1,4 @@
+import mpi4py.MPI
 import numpy as np
 from fenics import *
 import matplotlib.pyplot as plt
@@ -62,8 +63,6 @@ def plot(obj):
             colorbar_format = '% 1.1f'
             cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cax, format=colorbar_format)
 
-
-
     elif isinstance(obj, Mesh):
         plt.triplot(mesh2triang(obj), color='k')
 
@@ -76,6 +75,8 @@ case_num = args.case_num
 n_epoch = args.n_epoch
 
 directory = "./processed/train/" + case_num + "/"
+
+
 
 ####### loading mesh ########
 mesh = Mesh()
@@ -93,13 +94,19 @@ Space = FunctionSpace(mesh, VelocityElement * PressureElement)
 F = Function(Space)
 
 f, _ = F.split(deepcopy=True)
+f.set_allow_extrapolation(True)
+
+with HDF5File(MPI.comm_world, "../Dataset/" + case_num + "/Results.h5", "r") as h5file:
+    h5file.read(f, "mean")
+    # h5file.read(f, "forcing")
+
 
 # ####### loading forcing from GNN ################
 F_gnn = np.load('./Results/' + 'results.npy').flatten()
 # set_trace()
 
-collapsed_space = Space.sub(0).collapse()
-coord = list(collapsed_space.tabulate_dof_coordinates().tolist())
+# collapsed_space = Space.sub(0).collapse()
+# coord = list(collapsed_space.tabulate_dof_coordinates().tolist())
 # for i, x in enumerate(coord):
 #     f(x) = F_gnn[i]
 
@@ -109,8 +116,15 @@ coord = list(collapsed_space.tabulate_dof_coordinates().tolist())
 #     f.vector()[i] = x
 #     # print(i,x)
 
-f.vector().set_local(F_gnn)
+# f.vector().set_local(F_gnn)
 
+bmesh = sorted(BoundaryMesh(mesh, "exterior", True).coordinates().tolist())
+
+F = []
+for x in bmesh:
+    F.append(list(f(np.array(x))))
+    print('coordinate {} valore {}'.format(x, list(f(np.array(x)))))
+set_trace()
 plot(f.sub(0))
 plt.show()
 

@@ -95,6 +95,8 @@ class Phi_to(MessagePassing):
 
     def forward(self, x, edge_index, edge_attr):
 
+        edge_index, edge_attr = utils.dropout_adj(edge_index, edge_attr, p=0.2)
+
         edge_index, edge_attr = utils.remove_self_loops(edge_index, edge_attr)
 
         return self.propagate(edge_index, x = x, edge_attr = edge_attr)
@@ -113,6 +115,7 @@ class Phi_from(MessagePassing):
                                     nn.Linear(out_channels, out_channels))
 
     def forward(self, x, edge_index, edge_attr):
+        edge_index, edge_attr = utils.dropout_adj(edge_index, edge_attr, p=0.2)
 
         edge_index, edge_attr = utils.remove_self_loops(edge_index, edge_attr)
 
@@ -133,6 +136,7 @@ class Loop(nn.Module): #never used
                                     nn.Linear(out_channels, out_channels))
 
     def forward(self, x, edge_index, edge_attr):
+        edge_index, edge_attr = utils.dropout_adj(edge_index, edge_attr, p=0.2)
 
         edge_index, edge_attr = utils.add_self_loops(edge_index, edge_attr[:,0], num_nodes = x.size(0))
 

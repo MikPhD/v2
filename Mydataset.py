@@ -6,7 +6,7 @@ from io import IOBase
 import sys
 import math
 import torch
-import torch_geometric
+import torch_geometric.utils as Utils
 import torch_geometric.transforms as T
 from torch_geometric.data import InMemoryDataset, Data, DataLoader
 # from torch_geometric.nn import DataParallel

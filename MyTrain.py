@@ -126,7 +126,7 @@ class Train_DSS:
                     # corr_val += corrcoef(U[str(k)], sol_lu)
                     # rmse_val += torch.sqrt(torch.mean(U[str(k)] - sol_lu) ** 2)
 
-            scheduler.step()
+            scheduler.step(total_val_loss)
 
             self.hist["loss_val"].append(final_loss_val / len(loader_val))
             self.training_time = self.training_time + (time.time() - time_counter)

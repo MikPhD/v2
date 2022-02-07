@@ -1,0 +1,5 @@
+1 - settare train cases and validation cases - ok
+2 - Mesh del validation deve essere in Results - ok
+3 - settare LR, e altri parametri - ok
+4 - settare numero di epoche
+5 - settare numero di epoche per output 

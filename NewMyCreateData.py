@@ -78,9 +78,9 @@ class CreateData:
 
             C = [] #list of connection
             D = [] #lenght of connection in coordinates
-            # with Bar("Creazione connection, distances, value of function...", max=mesh.num_edges()) as bar:
+            # with Bar("Creazione connection, distances, value of function...", max=mesh.num_edges()) as bar: #does not work on slurm
             for i in range(mesh.num_edges()):
-                if i % 100 == 0:
+                if i % (mesh.num_edges()/2) == 0:
                     print("Elaborazione in corso: {} su {}".format(i, mesh.num_edges()))
                 # bar.next()
                 connection_mesh_index = np.array(mesh_connectivity(i)).astype(int)
@@ -143,7 +143,8 @@ class CreateData:
             np.save(specific_dir + "/F.npy", F)
             # np.save(specific_dir + "/coord.npy", coord)
             np.save(specific_dir + "/re.npy", int(h))
-            np.save(specific_dir + "/mesh_points", mesh_points)
+            if mode == 'val':
+                np.save("./Results/mesh_points.npy", mesh_points)
             ################# Fine salvataggio file ##################################
 
         ################# Print interface ########################################
@@ -166,20 +167,20 @@ class CreateData:
         # plt.show()
         x = []
         y = []
-        for i, (index1, index2) in enumerate(C[0:200]):
-            xv1 = mesh_points[index1][0]
-            yv1 = mesh_points[index1][1]
-            xv2 = mesh_points[index2][0]
-            yv2 = mesh_points[index2][1]
-            xmean = (xv1+xv2)/2
-            ymean = (yv1+yv2)/2
-
-            u = xv2-xv1
-            v = yv2-yv1
-
-            plt.plot([xv1,xv2], [yv1, yv2], 'ro-', label=i)
-            plt.annotate(i, xy=(xmean, ymean), xycoords='data')
-            plt.quiver(xmean, ymean, u, v)
+        # for i, (index1, index2) in enumerate(C[0:200]):
+        #     xv1 = mesh_points[index1][0]
+        #     yv1 = mesh_points[index1][1]
+        #     xv2 = mesh_points[index2][0]
+        #     yv2 = mesh_points[index2][1]
+        #     xmean = (xv1+xv2)/2
+        #     ymean = (yv1+yv2)/2
         #
-        plot(mesh)
-        plt.show()
+        #     u = xv2-xv1
+        #     v = yv2-yv1
+        #
+        #     plt.plot([xv1,xv2], [yv1, yv2], 'ro-', label=i)
+        #     plt.annotate(i, xy=(xmean, ymean), xycoords='data')
+        #     plt.quiver(xmean, ymean, u, v)
+        # #
+        # plot(mesh)
+        # plt.show()

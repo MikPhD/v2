@@ -1,17 +1,10 @@
-import mpi4py.MPI
-import numpy as np
 from fenics import *
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
-import numpy as np
 import argparse
-import traceback
 from pdb import set_trace
-import numpy as np
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib import cm
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from progress.bar import Bar
 

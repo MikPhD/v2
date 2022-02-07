@@ -58,7 +58,7 @@ class Train_DSS:
         return optimizer, scheduler, epoch, min_val_loss
 
 
-    def trainDSS(self, loader_train, loader_val, optimizer, scheduler, min_val_loss, epoch_in, k):
+    def trainDSS(self, loader_train, loader_val, optimizer, scheduler, min_val_loss, epoch_in, k, n_output):
         for epoch in range(epoch_in, self.n_epochs):
             time_counter = time.time()
 
@@ -152,10 +152,10 @@ class Train_DSS:
             else:
                 print("Training finished, took {:.2f}s".format(self.training_time))
 
-            if int(epoch) % 2 == 0:
+            if int(epoch) % n_output == 0:
                 F_fin = F[str(k)].cpu().numpy()
                 np.save("./Results/results" + str(epoch) + ".npy", F_fin)
-                print("File saved!")
+                print("Intermediate Plot Saved!")
 
         ## Save last model ##
         checkpoint = {
@@ -172,7 +172,7 @@ class Train_DSS:
 
         F_fin = F[str(k)].cpu().numpy()
         np.save("./Results/results.npy", F_fin)
-        print("File saved!")
+        print("Final Plot Saved")
 
         ### Save new log files ###
         with open('Stats/loss_train_log.txt', 'w') as f_loss_train:

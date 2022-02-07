@@ -42,10 +42,14 @@ for i in val_cases:
 
 ## Setting blank for new execution ##
 if not restart:
-    os.remove("./dataset/processed/data_val.pt")
-    os.remove("./dataset/processed/data_train.pt")
-    os.remove("./dataset/processed/pre_filter.pt")
-    os.remove("./dataset/processed/pre_transform.pt")
+    if os.path.exists("./dataset/processed/data_val.pt"):
+        os.remove("./dataset/processed/data_val.pt")
+    if os.path.exists("./dataset/processed/data_train.pt"):
+        os.remove("./dataset/processed/data_train.pt")
+    if os.path.exists("./dataset/processed/pre_filter.pt"):
+        os.remove("./dataset/processed/pre_filter.pt")
+    if os.path.exists("./dataset/processed/pre_transform.pt"):
+        os.remove("./dataset/processed/pre_transform.pt")
 
 print("#################### DATA ADAPTING FOR GNN #######################")
 createdata = CreateData()

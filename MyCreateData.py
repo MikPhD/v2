@@ -172,22 +172,22 @@ class CreateData:
         # for x, y in bmesh:
         #     plt.plot(x, y, 'b*')
         # plt.show()
-        x = []
-        y = []
-        for i, (index1, index2) in enumerate(C[0:1000]):
-            xv1 = mesh_points[index1][0]
-            yv1 = mesh_points[index1][1]
-            xv2 = mesh_points[index2][0]
-            yv2 = mesh_points[index2][1]
-            xmean = (xv1+xv2)/2
-            ymean = (yv1+yv2)/2
-
-            u = xv2-xv1
-            v = yv2-yv1
-
-            plt.plot([xv1,xv2], [yv1, yv2], 'ro-', label=i)
-            plt.annotate(i, xy=(xmean, ymean), xycoords='data')
-            plt.quiver(xmean, ymean, u, v)
+        # x = []
+        # y = []
+        # for i, (index1, index2) in enumerate(C[0:1000]):
+        #     xv1 = mesh_points[index1][0]
+        #     yv1 = mesh_points[index1][1]
+        #     xv2 = mesh_points[index2][0]
+        #     yv2 = mesh_points[index2][1]
+        #     xmean = (xv1+xv2)/2
+        #     ymean = (yv1+yv2)/2
         #
-        plot(mesh)
-        plt.show()
+        #     u = xv2-xv1
+        #     v = yv2-yv1
+        #
+        #     plt.plot([xv1,xv2], [yv1, yv2], 'ro-', label=i)
+        #     plt.annotate(i, xy=(xmean, ymean), xycoords='data')
+        #     plt.quiver(xmean, ymean, u, v)
+        # #
+        # plot(mesh)
+        # plt.show()

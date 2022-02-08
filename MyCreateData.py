@@ -1,16 +1,10 @@
 from fenics import *
-import matplotlib.pyplot as plt
-import math
-import numpy as np
-import sys
-import os
-from pathlib import Path
-import argparse
-from pdb import set_trace
 from progress.bar import Bar
-import itertools
-import time
+import numpy as np
+import matplotlib.pyplot as plt
+from pdb import set_trace
 import matplotlib.tri as tri
+import os
 
 class CreateData:
     def __init__(self):
@@ -20,25 +14,6 @@ class CreateData:
         parameters["form_compiler"]["cpp_optimize"] = True
         parameters["std_out_all_processes"] = False
 
-    # def bound_index_list(self, coord_dofs, bmesh, bound_index):
-    #     for n, x in enumerate(coord_dofs):
-    #         if x in bmesh:
-    #             bound_index.append(n)
-    #     return bound_index
-
-    # def create_connection(self, dofs_list, coord_dofs, bound_index_cell, node1, node2):
-    #     if node1 in bound_index_cell:
-    #         if node2 in bound_index_cell:
-    #             # print("entrambi sul bordo!", node1, node2)
-    #             return None, None
-    #     else:
-    #         c = [dofs_list[node1]/2, dofs_list[node2]/2]
-    #
-    #         dist_c_x = abs(coord_dofs[node1][0] - coord_dofs[node2][0])
-    #         dist_c_y = abs(coord_dofs[node1][1] - coord_dofs[node2][1])
-    #         dist_c = [dist_c_x, dist_c_y]
-    #
-    #         return c, dist_c
     def mesh2triang(self, mesh):
         xy = mesh.coordinates()
         return tri.Triangulation(xy[:, 0], xy[:, 1], mesh.cells())
@@ -55,21 +30,6 @@ class CreateData:
                 plt.tripcolor(self.mesh2triang(mesh), C, shading='gouraud')
         elif isinstance(obj, Mesh):
             plt.triplot(self.mesh2triang(obj), color='k')
-
-    def create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, node1, node2):
-        if node1 in bound_index_cell:
-            if node2 in bound_index_cell:
-                        # print("entrambi sul boundary!", node1, node2)
-                        return None, None, None
-        else:
-            c = [int(dofs_list_cell[node1] / 2), int(dofs_list_cell[node2] / 2)]
-            c_rev = c[::-1]
-
-            dist_c_x = abs(coord_dofs_cell[node1][0] - coord_dofs_cell[node2][0])
-            dist_c_y = abs(coord_dofs_cell[node1][1] - coord_dofs_cell[node2][1])
-            dist_c = [dist_c_x, dist_c_y]
-
-            return c, c_rev, dist_c
 
     def transform(self, cases, mode):
         for h in cases:
@@ -105,159 +65,81 @@ class CreateData:
             ############### End lettura file ####################################
 
             ################### Creazione elementi dataset ##########################
-            #### iterative tool used ####
-            collapsed_space = Space.sub(0).collapse()
-            dofmap = collapsed_space.dofmap()
+            #### lista delle connessioni della mesh ###
+            mesh_points = mesh.coordinates().tolist()
+            bmesh = BoundaryMesh(mesh, "exterior", True).coordinates().tolist()
 
-            ####definisco le node features della gnn #####
-            coord = []
-            coord_temp = list(collapsed_space.tabulate_dof_coordinates().tolist())
-            for i in coord_temp:
-                if i not in coord:
-                    coord.append(i)
-
-            U = []
-            F = []
-            for x in coord:
-                U.append(list(u(np.array(x))))
-                F.append(list(forc(np.array(x))))
-
-            #### GNN connectivity #####
-            C = [] ##connection list
-            D = [] ##distances between connection
-
-            bmesh = BoundaryMesh(mesh, "exterior", True).coordinates()
-            bmesh = bmesh.tolist()
-
-            suppl_point = []
-
-            ###
+            ### analizzo ogni edge della mesh ###
             mesh.init()
             mesh_topology = mesh.topology()
             mesh_connectivity = mesh_topology(1, 0)
-            with Bar("Creazione supplementary...", max=mesh.num_cells()) as bar2:
-                for i in range(mesh.num_edges()):
-                    bar2.next()
-                    connection = np.array(mesh_connectivity(i)).astype(int)
-                    coord_vert1 = (mesh.coordinates()[connection[0]]).tolist()
-                    coord_vert2 = (mesh.coordinates()[connection[1]]).tolist()
+
+            suppl_points = []
+
+            C = [] #list of connection
+            D = [] #lenght of connection in coordinates
+            # with Bar("Creazione connection, distances, value of function...", max=mesh.num_edges()) as bar: #does not work on slurm
+            for i in range(mesh.num_edges()):
+                if i % (mesh.num_edges()/2) == 0:
+                    print("Elaborazione in corso: {} su {}".format(i, mesh.num_edges()))
+                # bar.next()
+                connection_mesh_index = np.array(mesh_connectivity(i)).astype(int)
+                coord_vert1 = (mesh.coordinates()[connection_mesh_index[0]]).tolist()
+                coord_vert2 = (mesh.coordinates()[connection_mesh_index[1]]).tolist()
+
+                ### find point of boundary ###
+                if coord_vert1 and coord_vert2 in bmesh:
+                        pass
+                else:
+                    #### create intermediate points ###
+                    coord_vert3_x = (coord_vert1[0] + coord_vert2[0]) / 2
+                    coord_vert3_y = (coord_vert1[1] + coord_vert2[1]) / 2
+                    coord_vert3 = [coord_vert3_x, coord_vert3_y]
+
+                    suppl_points.append(coord_vert3)  ##useless
+                    mesh_points.append(coord_vert3)
+                    ### create connection ####
+                    index1 = mesh_points.index(coord_vert1)
+                    index2 = mesh_points.index(coord_vert2)
+                    index3 = mesh_points.index(coord_vert3)
+                    connection1 = [index1, index3]
+                    connection2 = [index3, index2]
+                    C.append(connection1)
+                    C.append(connection2)
+
+                    ### compute lenght of connection ###
+                    dist_c1_x = abs(coord_vert1[0] - coord_vert3[0])
+                    dist_c1_y = abs(coord_vert1[1] - coord_vert3[1])
+                    dist_c1 = [dist_c1_x, dist_c1_y]
+
+                    dist_c2_x = abs(coord_vert3[0] - coord_vert2[0])
+                    dist_c2_y = abs(coord_vert3[1] - coord_vert2[1])
+                    dist_c2 = [dist_c2_x, dist_c2_y]
+                    D.append(dist_c1)
+                    D.append(dist_c2)
 
                     if coord_vert1 in bmesh:
-                        if coord_vert2 in bmesh:
-                            coord_vert3_x = (coord_vert1[0] + coord_vert2[0])/2
-                            coord_vert3_y = (coord_vert1[1] + coord_vert2[1])/2
-                            suppl_point.append([coord_vert3_x, coord_vert3_y])
-
-            bmesh_x = []
-            bmesh_y = []
-            suppl_point_x = []
-            suppl_point_y = []
-            for i in bmesh:
-                bmesh_x.append(i[0])
-                bmesh_y.append(i[1])
-            for j in suppl_point:
-                suppl_point_x.append(j[0])
-                suppl_point_y.append(j[1])
-            plt.figure()
-            plot(mesh)
-            # plt.plot(bmesh_x, bmesh_y, 'r*')
-            plt.plot(suppl_point_x, suppl_point_y, 'g*')
-            # for i, j in zip(suppl_point_x, suppl_point_y):
-            #     plt.text(i, j, '({}, {})'.format(i, j))
-            plt.show()
-
-            set_trace()
-
-            dofs_on_bound = []
-            with Bar("Creazione connessioni...", max=mesh.num_cells()) as bar:
-                for i, j in enumerate(cells(mesh)):
-                    bar.next()
-
-                    c0 = Cell(mesh, i)
-
-                    #### dofs list and coordinates for each cell - remove odds ####
-                    dofs_list_cell_tot = dofmap.cell_dofs(c0.index())
-                    coord_dofs_cell_tot = collapsed_space.element().tabulate_dof_coordinates(c0)
-                    dofs_list_cell = []
-                    coord_dofs_cell = []
-
-                    for i, j in enumerate(dofs_list_cell_tot):
-                        if j % 2 == 0:
-                            dofs_list_cell.append(j)
-                            coord_dofs_cell.append(list(coord_dofs_cell_tot[i]))
-
-                    ###### dofs index on boundary ######
-                    bound_index_cell = []
-                    for n, x in enumerate(coord_dofs_cell):
-                        if x in bmesh:
-                            bound_index_cell.append(n)
-
-                    #### create monodirectional connection ####
-                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, int(3), int(1))
-                    if (c != None) and c not in C:
-                        C.append(c)
-                        C.append(c_rev)
-                        D.append(d)
-                        D.append(d)
-
-                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, int(3), int(2))
-                    if (c != None) and c not in C:
-                        C.append(c)
-                        C.append(c_rev)
-                        D.append(d)
-                        D.append(d)
-
-                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, int(4), int(0))
-                    if (c != None) and c not in C:
-                        C.append(c)
-                        C.append(c_rev)
-                        D.append(d)
-                        D.append(d)
-
-                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, int(4), int(2))
-                    if (c != None) and c not in C:
-                        C.append(c)
-                        C.append(c_rev)
-                        D.append(d)
-                        D.append(d)
-
-                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, int(5), int(0))
-                    if (c != None) and c not in C:
-                        C.append(c)
-                        C.append(c_rev)
-                        D.append(d)
-                        D.append(d)
-
-                    c, c_rev, d = CreateData.create_connection(self, dofs_list_cell, coord_dofs_cell, bound_index_cell, int(5), int(1))
-                    if (c != None) and c not in C:
-                        C.append(c)
-                        C.append(c_rev)
-                        D.append(d)
-                        D.append(d)
-
-                    for x in coord_dofs_cell:
-                        if x[0] == 0:
-                            if x not in dofs_on_bound:
-                                dofs_on_bound.append(x)
+                        connection3 = [index2, index3]
+                        C.append(connection3)
+                        D.append(dist_c2)
+                    elif coord_vert2 in bmesh:
+                        connection3 = [index3, index1]
+                        C.append(connection3)
+                        D.append(dist_c1)
+                    else:
+                        connection3 = [index3, index1]
+                        C.append(connection3)
+                        D.append(dist_c1)
+                        connection4 = [index2, index3]
+                        C.append(connection4)
+                        D.append(dist_c2)
 
 
-            # C_prov = []
-            # for x in C:
-            #     if x not in C_prov:
-            #         C_prov.append(x)
-            #
-            # D_prov = []
-            # for x in D:
-            #     if x not in D_prov:
-            #         D_prov.append(x)
-            #
-            bmesh_onbound = []
-            for x in bmesh:
-                if x[0] == 0:
-                    bmesh_onbound.append(x)
-
-            set_trace()
-            ######################### Fine creazione elementi############################
+            U = []
+            F = []
+            for x in mesh_points:
+                U.append(list(u(np.array(x))))
+                F.append(list(forc(np.array(x))))
 
             ###################### Salvataggio file Numpy ##############################
             os.makedirs("./dataset/raw/" + mode + "/" + h, exist_ok=True)
@@ -268,7 +150,44 @@ class CreateData:
             np.save(specific_dir + "/F.npy", F)
             # np.save(specific_dir + "/coord.npy", coord)
             np.save(specific_dir + "/re.npy", int(h))
+            if mode == 'val':
+                np.save("./Results/mesh_points.npy", mesh_points)
             ################# Fine salvataggio file ##################################
 
         ################# Print interface ########################################
-        print("Trasformazione file di " + mode + " completata!")#
+        print("Trasformazione file di " + mode + " completata!")
+
+            # set_trace()
+
+        # plt.figure()
+        # plot(mesh)
+        # for x, y in mesh_points:
+        #     plt.plot(x, y, 'r*')
+        # plt.show()
+        # plot(mesh)
+        # for x, y in suppl_points:
+        #     plt.plot(x, y, 'g*')
+        # plt.show()
+        # plot(mesh)
+        # for x, y in bmesh:
+        #     plt.plot(x, y, 'b*')
+        # plt.show()
+        x = []
+        y = []
+        for i, (index1, index2) in enumerate(C[0:1000]):
+            xv1 = mesh_points[index1][0]
+            yv1 = mesh_points[index1][1]
+            xv2 = mesh_points[index2][0]
+            yv2 = mesh_points[index2][1]
+            xmean = (xv1+xv2)/2
+            ymean = (yv1+yv2)/2
+
+            u = xv2-xv1
+            v = yv2-yv1
+
+            plt.plot([xv1,xv2], [yv1, yv2], 'ro-', label=i)
+            plt.annotate(i, xy=(xmean, ymean), xycoords='data')
+            plt.quiver(xmean, ymean, u, v)
+        #
+        plot(mesh)
+        plt.show()

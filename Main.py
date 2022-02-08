@@ -1,7 +1,7 @@
 from Mydataset import MyOwnDataset
 from MyDSS import MyOwnDSSNet
 from MyTrain import Train_DSS
-from NewMyCreateData import CreateData
+from MyCreateData import CreateData
 import argparse
 import sys
 import torch

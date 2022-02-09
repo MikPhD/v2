@@ -82,7 +82,7 @@ U = Function(Space)
 f, _ = F.split()
 f.set_allow_extrapolation(True)
 
-with HDF5File(MPI.comm_world, "../Dataset/110/Results.h5", "r") as h5file:
+with HDF5File(MPI.comm_world, "../Dataset/40/Results.h5", "r") as h5file:
     h5file.read(U, "mean")
     # h5file.read(f, "forcing")
 

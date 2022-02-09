@@ -88,9 +88,9 @@ class MyOwnDSSNet(nn.Module):
 
 class Phi_to(MessagePassing):
     def __init__(self, in_channels, out_channels):
-        super(Phi_to, self).__init__(aggr='add', flow = 'source_to_target')
+        super(Phi_to, self).__init__(aggr='mean', flow = 'source_to_target')
         self.MLP = nn.Sequential(   nn.Linear(in_channels, out_channels),
-                                    nn.ReLU(),
+                                    nn.Sigmoid(),
                                     nn.Linear(out_channels, out_channels))
 
     def forward(self, x, edge_index, edge_attr):
@@ -109,9 +109,9 @@ class Phi_to(MessagePassing):
 
 class Phi_from(MessagePassing):
     def __init__(self, in_channels, out_channels):
-        super(Phi_from, self).__init__(aggr='add', flow = "target_to_source")
+        super(Phi_from, self).__init__(aggr='mean', flow = "target_to_source")
         self.MLP = nn.Sequential(   nn.Linear(in_channels, out_channels),
-                                    nn.ReLU(),
+                                    nn.Sigmoid(),
                                     nn.Linear(out_channels, out_channels))
 
     def forward(self, x, edge_index, edge_attr):
@@ -132,7 +132,7 @@ class Loop(nn.Module): #never used
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         super(Loop, self).__init__()
         self.MLP = nn.Sequential(   nn.Linear(in_channels, out_channels),
-                                    nn.ReLU(),
+                                    nn.Sigmoid(),
                                     nn.Linear(out_channels, out_channels))
 
     def forward(self, x, edge_index, edge_attr):
@@ -152,7 +152,7 @@ class Psy(nn.Module):
         super(Psy, self).__init__()
 
         self.MLP = nn.Sequential(   nn.Linear(in_size, out_size),
-                                    nn.ReLU(),
+                                    nn.Sigmoid(),
                                     nn.Linear(out_size, out_size))
     def forward(self, x): #dimensione H + fi + fi + loop +B
         return self.MLP(x)
@@ -162,7 +162,7 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
 
         self.MLP = nn.Sequential(   nn.Linear(in_size, in_size),
-                                    nn.ReLU(),
+                                    nn.Sigmoid(),
                                     nn.Linear(in_size, out_size))
     def forward(self, x):
 

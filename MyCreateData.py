@@ -52,11 +52,15 @@ class CreateData:
             Space = FunctionSpace(mesh, VelocityElement * PressureElement)
 
             w = Function(Space)
+
             f = Function(Space)
 
             with HDF5File(self.comm, "../Dataset/" + str(h) + "/Results.h5", "r") as h5file:
                 h5file.read(w, "mean")
                 h5file.read(f, "forcing")
+
+            w.vector()[:] = w.vector()[:] - np.mean(w.vector()[:])
+            f.vector()[:] = f.vector()[:] - np.mean(f.vector()[:])
 
             u, p = w.split(deepcopy='true')
             u.set_allow_extrapolation(True)

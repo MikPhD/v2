@@ -7,6 +7,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from progress.bar import Bar
+import numpy as np
 
 
 from collections import OrderedDict

@@ -122,21 +122,21 @@ class CreateData:
                     D.append(dist_c1)
                     D.append(dist_c2)
 
-                    if coord_vert1 in bmesh:
-                        connection3 = [index2, index3]
-                        C.append(connection3)
-                        D.append(dist_c2)
-                    elif coord_vert2 in bmesh:
-                        connection3 = [index3, index1]
-                        C.append(connection3)
-                        D.append(dist_c1)
-                    else:
-                        connection3 = [index3, index1]
-                        C.append(connection3)
-                        D.append(dist_c1)
-                        connection4 = [index2, index3]
-                        C.append(connection4)
-                        D.append(dist_c2)
+                    # if coord_vert1 in bmesh:
+                    #     connection3 = [index2, index3]
+                    #     C.append(connection3)
+                    #     D.append(dist_c2)
+                    # elif coord_vert2 in bmesh:
+                    #     connection3 = [index3, index1]
+                    #     C.append(connection3)
+                    #     D.append(dist_c1)
+                    # else:
+                    #     connection3 = [index3, index1]
+                    #     C.append(connection3)
+                    #     D.append(dist_c1)
+                    #     connection4 = [index2, index3]
+                    #     C.append(connection4)
+                    #     D.append(dist_c2)
 
 
             U = []

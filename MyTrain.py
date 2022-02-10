@@ -6,6 +6,8 @@ import os
 from MyPlot import Plot
 import ast
 import matplotlib.pyplot as plt
+import torch.nn as nn
+
 
 from progress.bar import Bar
 
@@ -174,7 +176,7 @@ class Train_DSS:
 
         F_fin = F[str(k)].cpu().numpy()
         np.save("./Results/results.npy", F_fin)
-        print("Final Plot Saved")
+        print("Final Results Saved")
 
         ### Save new log files ###
         with open('Stats/loss_train_log.txt', 'w') as f_loss_train:
@@ -194,9 +196,10 @@ class Train_DSS:
 
         return self.net
 
+
 # def loss_function(U, edge_index, edge_attr, y): ##non utilizzata --> utilizzo mse_loss
 #
-#     B0 = y[:,0].reshape(-1,1)
+    # B0 = y[:,0].reshape(-1,1)
 #     B1 = y[:,1].reshape(-1,1)
 #     # B2 = y[:,2].reshape(-1,1)
 #

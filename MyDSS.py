@@ -5,6 +5,7 @@ import torchvision
 import torch.nn as nn
 from torch_geometric import utils, data
 from torch_geometric.nn import MessagePassing
+from MyTrain import Train_DSS
 from pdb import set_trace
 import sys
 import os
@@ -24,10 +25,16 @@ class MyOwnDSSNet(nn.Module):
 
         #Neural network
         self.phi_to_list = nn.ModuleList([Phi_to(2*self.latent_dimension + 2, self.latent_dimension) for i in range(self.k)])
-        # self.phi_from_list = nn.ModuleList([Phi_from(2*self.latent_dimension + 2, self.latent_dimension) for i in range(self.k)])
+        self.phi_from_list = nn.ModuleList([Phi_from(2*self.latent_dimension + 2, self.latent_dimension) for i in range(self.k)])
         self.phi_loop_list = nn.ModuleList([Loop(2*self.latent_dimension+1, self.latent_dimension) for i in range(self.k)])
-        self.psy_list = nn.ModuleList([Psy(3*self.latent_dimension + 3, self.latent_dimension) for i in range(self.k)])
+        self.psy_list = nn.ModuleList([Psy(4*self.latent_dimension + 3, self.latent_dimension) for i in range(self.k)])
         self.decoder_list = nn.ModuleList([Decoder(self.latent_dimension, 2) for i in range(self.k)])
+
+    def loss_function(self, F, y):
+        # loss = nn.functional.mse_loss(F, y)
+        loss = torch.norm(F - y)/torch.norm(y)
+        # loss = (F - y)
+        return loss
 
     def forward(self, batch):
 
@@ -48,13 +55,13 @@ class MyOwnDSSNet(nn.Module):
             mess_to = self.phi_to_list[update](H[str(update)], batch.edge_index, batch.edge_attr)
             #print("Message_To size : ", mess_to.size())
 
-            # mess_from = self.phi_from_list[update](H[str(update)], batch.edge_index, batch.edge_attr)
+            mess_from = self.phi_from_list[update](H[str(update)], batch.edge_index, batch.edge_attr)
             #print("Message_from size : ", mess_from.size())
 
             loop = self.phi_loop_list[update](H[str(update)], batch.edge_index, batch.edge_attr)
             #print("Message loop size :", loop.size())
 
-            concat = torch.cat([H[str(update)], mess_to, loop, batch.x], dim = 1)
+            concat = torch.cat([H[str(update)], mess_to, mess_from, loop, batch.x], dim = 1)
             #concat = torch.cat([H[str(update)], mess_to, mess_from, loop, y], dim = 1)
             #print("Size concat : ", concat.size())
 
@@ -69,9 +76,11 @@ class MyOwnDSSNet(nn.Module):
             #print("Size of U : ", U[str(update+1)].size())
             #print(self.decoder_list[update])
 
-            # loss[str(update+1)] = loss_function(U[str(update+1)], batch.edge_index, batch.edge_attr, batch.y)
+            loss[str(update+1)] = self.loss_function(F[str(update+1)], batch.y)
 
-            loss[str(update+1)] = nn.functional.mse_loss(F[str(update+1)], batch.y)
+            # loss[str(update+1)] = Train_DSS.loss_function(U[str(update+1)], batch.edge_index, batch.edge_attr, batch.y)
+
+            # loss[str(update+1)] = nn.functional.mse_loss(F[str(update+1)], batch.y)
 
             if total_loss is None :
                 total_loss = loss[str(update+1)] * self.gamma**(self.k - update - 1)
@@ -107,25 +116,25 @@ class Phi_to(MessagePassing):
 
         return self.MLP(tmp)
 
-# class Phi_from(MessagePassing):
-#     def __init__(self, in_channels, out_channels):
-#         super(Phi_from, self).__init__(aggr='add', flow = "target_to_source")
-#         self.MLP = nn.Sequential(   nn.Linear(in_channels, out_channels),
-#                                     nn.ReLu(),
-#                                     nn.Linear(out_channels, out_channels))
-#
-#     def forward(self, x, edge_index, edge_attr):
-#         edge_index, edge_attr = utils.dropout_adj(edge_index, edge_attr, p=0.2)
-#
-#         edge_index, edge_attr = utils.remove_self_loops(edge_index, edge_attr)
-#
-#         return self.propagate(edge_index, x=x, edge_attr=edge_attr)
-#
-#     def message(self, x_i, x_j, edge_attr):
-#
-#         tmp = torch.cat([x_i, x_j, edge_attr], dim = 1)
-#
-#         return self.MLP(tmp)
+class Phi_from(MessagePassing):
+    def __init__(self, in_channels, out_channels):
+        super(Phi_from, self).__init__(aggr='add', flow = "target_to_source")
+        self.MLP = nn.Sequential(   nn.Linear(in_channels, out_channels),
+                                    nn.ReLU(),
+                                    nn.Linear(out_channels, out_channels))
+
+    def forward(self, x, edge_index, edge_attr):
+        edge_index, edge_attr = utils.dropout_adj(edge_index, edge_attr, p=0.2)
+
+        edge_index, edge_attr = utils.remove_self_loops(edge_index, edge_attr)
+
+        return self.propagate(edge_index, x=x, edge_attr=edge_attr)
+
+    def message(self, x_i, x_j, edge_attr):
+
+        tmp = torch.cat([x_i, x_j, edge_attr], dim = 1)
+
+        return self.MLP(tmp)
 
 class Loop(nn.Module): #never used
     def __init__(self, in_channels, out_channels):

@@ -63,7 +63,7 @@ def plot(obj):
         plt.triplot(mesh2triang(obj), color='k')
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--case_num', help='case number', type=str, default="110")
+parser.add_argument('-i', '--case_num', help='case number', type=str, default="40")
 parser.add_argument('-n', '--n_epoch', help='num epoch', type=str, default="")
 args = parser.parse_args()
 
@@ -116,9 +116,9 @@ with Bar("Creazione connessioni...", max=len(mesh_points)) as bar:
         f.vector()[(index)+1] = F_gnn[(i*2)+1]
 
 bmesh = BoundaryMesh(mesh, "exterior", True).coordinates().tolist()
-for i in bmesh:
-    print(f(i))
-set_trace()
+# for i in bmesh:
+#     print(f(i))
+# set_trace()
 plot(f.sub(0))
 plt.show()
 

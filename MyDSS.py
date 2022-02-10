@@ -24,9 +24,9 @@ class MyOwnDSSNet(nn.Module):
 
         #Neural network
         self.phi_to_list = nn.ModuleList([Phi_to(2*self.latent_dimension + 2, self.latent_dimension) for i in range(self.k)])
-        self.phi_from_list = nn.ModuleList([Phi_from(2*self.latent_dimension + 2, self.latent_dimension) for i in range(self.k)])
+        # self.phi_from_list = nn.ModuleList([Phi_from(2*self.latent_dimension + 2, self.latent_dimension) for i in range(self.k)])
         self.phi_loop_list = nn.ModuleList([Loop(2*self.latent_dimension+1, self.latent_dimension) for i in range(self.k)])
-        self.psy_list = nn.ModuleList([Psy(4*self.latent_dimension + 3, self.latent_dimension) for i in range(self.k)])
+        self.psy_list = nn.ModuleList([Psy(3*self.latent_dimension + 3, self.latent_dimension) for i in range(self.k)])
         self.decoder_list = nn.ModuleList([Decoder(self.latent_dimension, 2) for i in range(self.k)])
 
     def forward(self, batch):
@@ -48,13 +48,13 @@ class MyOwnDSSNet(nn.Module):
             mess_to = self.phi_to_list[update](H[str(update)], batch.edge_index, batch.edge_attr)
             #print("Message_To size : ", mess_to.size())
 
-            mess_from = self.phi_from_list[update](H[str(update)], batch.edge_index, batch.edge_attr)
+            # mess_from = self.phi_from_list[update](H[str(update)], batch.edge_index, batch.edge_attr)
             #print("Message_from size : ", mess_from.size())
 
             loop = self.phi_loop_list[update](H[str(update)], batch.edge_index, batch.edge_attr)
             #print("Message loop size :", loop.size())
 
-            concat = torch.cat([H[str(update)], mess_to, mess_from, loop, batch.x], dim = 1)
+            concat = torch.cat([H[str(update)], mess_to, loop, batch.x], dim = 1)
             #concat = torch.cat([H[str(update)], mess_to, mess_from, loop, y], dim = 1)
             #print("Size concat : ", concat.size())
 
@@ -88,9 +88,9 @@ class MyOwnDSSNet(nn.Module):
 
 class Phi_to(MessagePassing):
     def __init__(self, in_channels, out_channels):
-        super(Phi_to, self).__init__(aggr='mean', flow = 'source_to_target')
+        super(Phi_to, self).__init__(aggr='add', flow = 'source_to_target')
         self.MLP = nn.Sequential(   nn.Linear(in_channels, out_channels),
-                                    nn.Sigmoid(),
+                                    nn.ReLU(),
                                     nn.Linear(out_channels, out_channels))
 
     def forward(self, x, edge_index, edge_attr):
@@ -107,32 +107,32 @@ class Phi_to(MessagePassing):
 
         return self.MLP(tmp)
 
-class Phi_from(MessagePassing):
-    def __init__(self, in_channels, out_channels):
-        super(Phi_from, self).__init__(aggr='mean', flow = "target_to_source")
-        self.MLP = nn.Sequential(   nn.Linear(in_channels, out_channels),
-                                    nn.Sigmoid(),
-                                    nn.Linear(out_channels, out_channels))
-
-    def forward(self, x, edge_index, edge_attr):
-        edge_index, edge_attr = utils.dropout_adj(edge_index, edge_attr, p=0.2)
-
-        edge_index, edge_attr = utils.remove_self_loops(edge_index, edge_attr)
-
-        return self.propagate(edge_index, x=x, edge_attr=edge_attr)
-
-    def message(self, x_i, x_j, edge_attr):
-
-        tmp = torch.cat([x_i, x_j, edge_attr], dim = 1)
-
-        return self.MLP(tmp)
+# class Phi_from(MessagePassing):
+#     def __init__(self, in_channels, out_channels):
+#         super(Phi_from, self).__init__(aggr='add', flow = "target_to_source")
+#         self.MLP = nn.Sequential(   nn.Linear(in_channels, out_channels),
+#                                     nn.ReLu(),
+#                                     nn.Linear(out_channels, out_channels))
+#
+#     def forward(self, x, edge_index, edge_attr):
+#         edge_index, edge_attr = utils.dropout_adj(edge_index, edge_attr, p=0.2)
+#
+#         edge_index, edge_attr = utils.remove_self_loops(edge_index, edge_attr)
+#
+#         return self.propagate(edge_index, x=x, edge_attr=edge_attr)
+#
+#     def message(self, x_i, x_j, edge_attr):
+#
+#         tmp = torch.cat([x_i, x_j, edge_attr], dim = 1)
+#
+#         return self.MLP(tmp)
 
 class Loop(nn.Module): #never used
     def __init__(self, in_channels, out_channels):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         super(Loop, self).__init__()
         self.MLP = nn.Sequential(   nn.Linear(in_channels, out_channels),
-                                    nn.Sigmoid(),
+                                    nn.ReLU(),
                                     nn.Linear(out_channels, out_channels))
 
     def forward(self, x, edge_index, edge_attr):
@@ -152,7 +152,7 @@ class Psy(nn.Module):
         super(Psy, self).__init__()
 
         self.MLP = nn.Sequential(   nn.Linear(in_size, out_size),
-                                    nn.Sigmoid(),
+                                    nn.ReLU(),
                                     nn.Linear(out_size, out_size))
     def forward(self, x): #dimensione H + fi + fi + loop +B
         return self.MLP(x)
@@ -162,7 +162,7 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
 
         self.MLP = nn.Sequential(   nn.Linear(in_size, in_size),
-                                    nn.Sigmoid(),
+                                    nn.ReLU(),
                                     nn.Linear(in_size, out_size))
     def forward(self, x):
 

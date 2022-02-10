@@ -59,8 +59,8 @@ class CreateData:
                 h5file.read(w, "mean")
                 h5file.read(f, "forcing")
 
-            w.vector()[:] = w.vector()[:] - np.mean(w.vector()[:])
-            f.vector()[:] = f.vector()[:] - np.mean(f.vector()[:])
+            # w.vector()[:] = w.vector()[:] - np.mean(w.vector()[:])
+            # f.vector()[:] = f.vector()[:] - np.mean(f.vector()[:])
 
             u, p = w.split(deepcopy='true')
             u.set_allow_extrapolation(True)

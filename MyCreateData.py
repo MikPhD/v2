@@ -52,7 +52,6 @@ class CreateData:
             Space = FunctionSpace(mesh, VelocityElement * PressureElement)
 
             w = Function(Space)
-
             f = Function(Space)
 
             with HDF5File(self.comm, "../Dataset/" + str(h) + "/Results.h5", "r") as h5file:
@@ -100,7 +99,7 @@ class CreateData:
                     coord_vert3_y = (coord_vert1[1] + coord_vert2[1]) / 2
                     coord_vert3 = [coord_vert3_x, coord_vert3_y]
 
-                    suppl_points.append(coord_vert3)  ##useless
+                    # suppl_points.append(coord_vert3)  ##useless
                     mesh_points.append(coord_vert3)
                     ### create connection ####
                     index1 = mesh_points.index(coord_vert1)

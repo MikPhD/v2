@@ -16,6 +16,8 @@ cmaps = OrderedDict()
 
 cmaps['Perceptually Uniform Sequential'] = ['plasma_r']
 
+case_num = "40"
+
 def mesh2triang(mesh):
     xy = mesh.coordinates()
     return tri.Triangulation(xy[:, 0], xy[:, 1], mesh.cells())
@@ -88,16 +90,16 @@ F = Function(Space)
 f, _ = F.split(deepcopy=True)
 f.set_allow_extrapolation(True)
 
-# with HDF5File(MPI.comm_world, "../Dataset/" + case_num + "/Results.h5", "r") as h5file:
-#     h5file.read(f, "mean")
-#     # h5file.read(f, "forcing")
+with HDF5File(MPI.comm_world, "../Dataset/" + case_num + "/Results.h5", "r") as h5file:
+    h5file.read(f, "forcing")
+    # h5file.read(f, "forcing")
 
 
 # ####### loading forcing from GNN ################
-F_gnn = np.load('./Results/' + 'results.npy').flatten()
-mesh_points = np.load('./Results/mesh_points.npy').tolist()
+# F_gnn = np.load('./Results/' + 'results.npy').flatten()
+# mesh_points = np.load('./Results/mesh_points.npy').tolist()
 
-dofs_coordinates_prev = Space.sub(0).collapse().tabulate_dof_coordinates().tolist()
+# dofs_coordinates_prev = Space.sub(0).collapse().tabulate_dof_coordinates().tolist()
 
 # dofs_coordinates = []
 # with Bar("Creazione connessioni...", max=len(dofs_coordinates_prev)) as bar:
@@ -107,18 +109,22 @@ dofs_coordinates_prev = Space.sub(0).collapse().tabulate_dof_coordinates().tolis
 #             dofs_coordinates.append(i)
 
 # set_trace()
-with Bar("Creazione connessioni...", max=len(mesh_points)) as bar:
+# with Bar("Creazione connessioni...", max=len(mesh_points)) as bar:
+#
+#     for i, x in enumerate(mesh_points):
+#         bar.next()
+#         index = dofs_coordinates_prev.index(x)
+#         f.vector()[(index)] = F_gnn[i*2]
+#         f.vector()[(index)+1] = F_gnn[(i*2)+1]
 
-    for i, x in enumerate(mesh_points):
-        bar.next()
-        index = dofs_coordinates_prev.index(x)
-        f.vector()[(index)] = F_gnn[i*2]
-        f.vector()[(index)+1] = F_gnn[(i*2)+1]
-
-bmesh = BoundaryMesh(mesh, "exterior", True).coordinates().tolist()
+# bmesh = BoundaryMesh(mesh, "exterior", True).coordinates().tolist()
 # for i in bmesh:
 #     print(f(i))
 # set_trace()
+
+print("minimo" , np.amin(f.vector()[:]))
+print("massimo" , np.amax(f.vector()[:]))
+print("media" , np.mean(f.vector()[:]))
 plot(f.sub(0))
 plt.show()
 
